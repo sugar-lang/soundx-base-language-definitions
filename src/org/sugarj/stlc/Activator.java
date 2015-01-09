@@ -8,7 +8,7 @@ import org.sugarj.soundx.SoundXActivator;
 public class Activator extends SoundXActivator {
 	public static final String PLUGIN_ID = "org.sugarj.stlc";
 	public Activator() {
-		super("STLC.bld");
+		super("STLC.sxbld");
 	}
 }
 //public class Activator extends AbstractUIPlugin {
