@@ -1,7 +1,7 @@
 base language definition STLC
 
-base file extension st
-extensible file extension xst
+//base file extension st
+//extensible file extension xst
 
 lexical syntax
   [0-9][0-9]*          -> NAT
@@ -106,11 +106,6 @@ toplevel declaration ToplevelDec
 toplevel declarations ToplevelDecs
 
 interface Env
-
-context-free syntax
-  Header -> ToplevelDec
-  Import -> ToplevelDec
-  Def    -> ToplevelDec
 
 judgement forms
   { Env "|-" ToplevelDecs "=>" Env }     // Witout lists
