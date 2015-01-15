@@ -4,6 +4,12 @@ base language definition STLC
 //extensible file extension xst
 
 lexical syntax
+    [\ \t\r\n] -> LAYOUT
+
+context-free restrictions
+    LAYOUT? -/- [\ \t\r\n]
+
+lexical syntax
   [0-9][0-9]*          -> NAT
   [a-zA-Z][a-zA-Z0-9]* -> ID {sx-requires-inequality}
 
