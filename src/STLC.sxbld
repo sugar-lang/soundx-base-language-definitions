@@ -1,7 +1,7 @@
 base language definition STLC
 
-//base file extension st
-//extensible file extension xst
+base file extension st
+extensible file extension xst
 
 lexical syntax
     [\ \t\r\n] -> LAYOUT
