@@ -19,7 +19,8 @@ lexical restrictions
 
 lexical syntax
   "Nat"         -> PrimitiveType
-  PrimitiveType -> ID {reject}
+  PrimitiveType -> ID  {reject}
+  PrimitiveType -> MID {reject}
 
 context-free syntax 
   ID                        -> Term {cons("Var")}
@@ -93,6 +94,13 @@ inductive definitions
 
 lexical syntax
   [a-zA-Z][a-zA-Z0-9]* -> MID {sx-namespace-flat}
+
+lexical syntax
+  "import" -> Keyword
+  "val"    -> Keyword
+  "only"   -> Keyword
+  Keyword  -> ID  {reject}
+  Keyword  -> MID {reject}
 
 context-free syntax
   "module" mid:MID -> Header {sx-namespace-dec(mid)}
