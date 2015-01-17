@@ -97,7 +97,6 @@ lexical syntax
 
 lexical syntax
   "import" -> Keyword
-  "val"    -> Keyword
   "only"   -> Keyword
   Keyword  -> ID  {reject}
   Keyword  -> MID {reject}
@@ -111,7 +110,7 @@ context-free syntax
   MID          -> OnlyList
   MID OnlyList -> OnlyList
 
-  "val" ID "=" Term -> Def {sx-body-dec}
+  ID "=" Term ";" -> Def {sx-body-dec}
 
 // With lists:
 // toplevel declaration ToplevelDec
@@ -130,7 +129,6 @@ judgement forms
 lexical syntax
   "mid" [a-zA-Z0-9]*   -> MVMID
   "tlds" [a-zA-Z0-9]*  -> MVToplevelDecs
-  "~tlds" [a-zA-Z0-9]* -> MVToplevelDecs
 
 lexical restrictions
   MVMID MVToplevelDecs -/- [a-zA-Z0-9]
@@ -156,9 +154,9 @@ inductive definitions
 
   S-DefEnd:
     x notin dom(C)
-    C |- e : T
+    C |- t : T
     ------------------------
-    C |- val x = t => {},x:T
+    C |- x = t; => {},x:T
 
   S-DefCons:
     x notin dom(C)
@@ -166,7 +164,7 @@ inductive definitions
     C,x:T |- tlds => C1
     Csig = {},x:T + C1
     ----------------------------
-    C |- val x = t ~tlds => Csig
+    C |- x = t; tlds => Csig
 
 // TODO bld: define x notin dom(C), C = C1 + C2
 
