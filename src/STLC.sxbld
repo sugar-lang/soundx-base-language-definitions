@@ -69,25 +69,25 @@ judgement forms
   { Env "|-" Term ":" Type } 
 
 inductive definitions
-  Var:
+  T-Var:
     --------------
     C,x:T |- x : T
-  VarWeak:
+  T-VarWeak:
     (x =/= y) (C |- x : T)
     ----------------------
     C,y:S |- x : T
-  Nat:
+  T-Nat:
     ------------
     C |- n : Nat
-  App:
+  T-App:
     C,x:T |- t : T2
     ------------------------
     C |- \x:T1. t : T1 -> T2
-  Abs:
+  T-Abs:
     (C |- t1 : T1 -> T2) (C |- t2 : T1)
     -----------------------------------
     C |- t1 t2 : T2
-  Add:
+  T-Add:
     (C |- t1 : Nat) (C |- t2 : Nat)
     -------------------------------
     C |- t1 + t2 : Nat
@@ -152,19 +152,38 @@ inductive definitions
 
   // TODO bld: import only
 
-  S-DefEnd:
-    x notin dom(C)
-    C |- t : T
-    ------------------------
-    C |- x = t; => {},x:T
-
   S-DefCons:
     x notin dom(C)
     C |- t : T
     C,x:T |- tlds => C1
     Csig = {},x:T + C1
-    ----------------------------
+    ------------------------
     C |- x = t; tlds => Csig
+
+  S-DefEnd:
+    x notin dom(C)
+    C |- t : T
+    ---------------------
+    C |- x = t; => {},x:T
+
+  F-Empty:
+    ---------------
+    x notin dom({})
+
+  F-Cons:
+    (x =/= y) (x notin dom(C))
+    --------------------------
+    x notin dom(C,y:T)
+
+  U-Empty:
+    ----------
+    C = C + {}
+
+  U-Cons:
+    C0 = C1 + C2
+    x notin dom(C0)
+    --------------------
+    C0,x:T = C1 + C2,x:T
 
 // TODO bld: define x notin dom(C), C = C1 + C2
 
