@@ -79,11 +79,11 @@ inductive definitions
   T-Nat:
     ------------
     C |- n : Nat
-  T-App:
-    C,x:T |- t : T2
+  T-Abs:
+    C,x:T1 |- t : T2
     ------------------------
     C |- \x:T1. t : T1 -> T2
-  T-Abs:
+  T-App:
     (C |- t1 : T1 -> T2) (C |- t2 : T1)
     -----------------------------------
     C |- t1 t2 : T2
