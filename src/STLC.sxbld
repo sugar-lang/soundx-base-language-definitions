@@ -188,8 +188,10 @@ inductive definitions
 // TODO bld: define x notin dom(C), C = C1 + C2
 
 extension begin ExtensionBegin
+extension end ExtensionEnd
 
 context-free syntax
-  "extension" -> ExtensionBegin
+  "extension" "{" -> ExtensionBegin
+  "}"             -> ExtensionEnd
 
 interface for tlds is C derived by {} |- tlds => C
