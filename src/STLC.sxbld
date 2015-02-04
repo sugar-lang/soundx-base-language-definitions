@@ -30,6 +30,11 @@ context-free syntax
   Term "+" Term             -> Term {cons("Add"), left}
   "(" Term ")"              -> Term {bracket}
 
+context-free priorities
+  Term Term                 -> Term >
+  Term "+" Term             -> Term >
+  "\\" ID ":" Type "." Term -> Term
+  
 context-free syntax
   "Nat"          -> Type
   Type "->" Type -> Type {right}
