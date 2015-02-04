@@ -165,11 +165,9 @@ inductive definitions
     ------------------------
     C |- x = t; tlds => Csig
 
-  S-DefEnd:
-    x notin dom(C)
-    C |- t : T
-    ---------------------
-    C |- x = t; => {},x:T
+  S-DefNil:
+    ----------
+    C |- => {}
 
   F-Empty:
     ---------------
