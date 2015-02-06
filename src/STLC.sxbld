@@ -4,10 +4,17 @@ base file extension st
 extensible file extension xst
 
 lexical syntax
-    [\ \t\r\n] -> LAYOUT
+  [\ \t\r\n] -> LAYOUT
+
+  "//" ~[\n\r]* ([\n\r] | EOF) -> LAYOUT
+                               -> EOF
 
 context-free restrictions
-    LAYOUT? -/- [\ \t\r\n]
+  LAYOUT? -/- [\ \t\r\n]
+  LAYOUT? -/- [\/] . [\/]
+
+lexical restrictions
+  EOF -/- ~[]
 
 lexical syntax
   [0-9][0-9]*          -> NAT
