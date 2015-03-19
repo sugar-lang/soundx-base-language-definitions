@@ -1,0 +1,223 @@
+base language definition STLCWeak
+
+base file extension stw
+extensible file extension xstw
+
+lexical syntax
+  [\ \t\r\n] -> LAYOUT
+
+  "//" ~[\n\r]* ([\n\r] | EOF) -> LAYOUT
+                               -> EOF
+
+context-free restrictions
+  LAYOUT? -/- [\ \t\r\n]
+  LAYOUT? -/- [\/] . [\/]
+
+lexical restrictions
+  EOF -/- ~[]
+
+lexical syntax
+  [0-9][0-9]*          -> NAT
+  [a-zA-Z][a-zA-Z0-9]* -> ID {sx-atoms(IDSet)}
+
+lexical restrictions
+  NAT -/- [0-9]
+  ID  -/- [a-zA-Z0-9]
+
+lexical syntax
+  "Nat"         -> PrimitiveType
+  PrimitiveType -> ID  {reject}
+  PrimitiveType -> MID {reject}
+
+context-free syntax 
+  ID                        -> Term {cons("Var")}
+  "\\" ID ":" Type "." Term -> Term {cons("Abs")}
+  Term Term                 -> Term {cons("App"), left}
+  NAT                       -> Term {cons("Nat")}
+  Term "+" Term             -> Term {cons("Add"), left}
+  "(" Term ")"              -> Term {bracket}
+
+context-free priorities
+  Term Term                 -> Term >
+  Term "+" Term             -> Term >
+  "\\" ID ":" Type "." Term -> Term
+  
+context-free syntax
+  "Nat"          -> Type
+  Type "->" Type -> Type {right}
+  "(" Type ")"   -> Type {bracket} 
+
+lexical syntax
+  "x" [a-zA-Z0-9]* -> MVID
+  "y" [a-zA-Z0-9]* -> MVID
+  "n" [a-zA-Z0-9]* -> MVNAT
+  "t" [a-zA-Z0-9]* -> MVTerm
+  "S" [a-zA-Z0-9]* -> MVType
+  "T" [a-zA-Z0-9]* -> MVType
+
+lexical restrictions
+  MVID MVNAT MVTerm MVType -/- [a-zA-Z0-9]
+
+variables
+  MVID   -> ID    {prefer}
+  MVNAT  -> NAT   {prefer}
+  MVTerm -> Term  {prefer}
+  MVType -> Type  {prefer}
+
+context-free syntax
+  "{}"                -> Env 
+  Env "," ID ":" Type -> Env
+
+lexical syntax
+  "C" [a-zA-Z0-9]* -> MVEnv
+  "X" [a-zA-Z0-9]* -> MVIDSet
+
+lexical restrictions
+  MVEnv   -/- [a-zA-Z0-9]
+  MVIDSet -/- [a-zA-Z0-9]
+
+variables
+  MVEnv   -> Env   {prefer}
+  MVIDSet -> IDSet {prefer}
+  
+judgement forms 
+  { Env "|-" Term ":" Type }
+  { ID "notin" "dom" "(" Env ")" }
+  { "dom" "(" Env ")" "=" IDSet }
+
+inductive definitions
+  D-Empty:
+    ------------
+    dom({}) = {}
+  D-Cons:
+    dom(C) = X
+    ----------------------
+    dom(C,x:T) = X U { x }
+
+  E-Fresh:
+    (dom(C) = X) (x notin X)
+    ------------------------
+    x notin dom(C)
+
+  T-Var:
+    --------------
+    C,x:T |- x : T
+  T-Weak:
+    (C |- t : T) (y notin dom(C))
+    -----------------------------
+    C,y:S |- t : T
+  T-Nat:
+    ------------
+    C |- n : Nat
+  T-Abs:
+    C,x:T1 |- t : T2
+    ------------------------
+    C |- \x:T1. t : T1 -> T2
+  T-App:
+    (C |- t1 : T1 -> T2) (C |- t2 : T1)
+    -----------------------------------
+    C |- t1 t2 : T2
+  T-Add:
+    (C |- t1 : Nat) (C |- t2 : Nat)
+    -------------------------------
+    C |- t1 + t2 : Nat
+
+lexical syntax
+  [a-zA-Z][a-zA-Z0-9]* -> MID {sx-namespace-flat}
+
+lexical syntax
+  "import" -> Keyword
+  "only"   -> Keyword
+  Keyword  -> ID  {reject}
+  Keyword  -> MID {reject}
+
+context-free syntax
+  "module" mid:MID -> Header {sx-namespace-dec(mid)}
+
+  "import" mid:MID                 -> Import {sx-import-dec(mid)}
+  "import" mid:MID "only" OnlyList -> Import {sx-import-dec(mid)}
+
+  MID          -> OnlyList
+  MID OnlyList -> OnlyList
+
+  ID "=" Term ";" -> Def {sx-body-dec}
+
+// With lists:
+// toplevel declaration ToplevelDec
+// Without lists:
+toplevel declaration ToplevelDec
+toplevel declarations ToplevelDecs
+
+interface Env
+
+judgement forms
+  { Env "|-" ToplevelDecs "=>" Env }     // Witout lists
+  // { Env "|-" ToplevelDec+ "=">" Env } // With lists
+  { Env "=" Env "+" Env }
+  { ID "notin" "dom" "(" Env ")" }
+
+lexical syntax
+  "mid" [a-zA-Z0-9]*   -> MVMID
+  "tlds" [a-zA-Z0-9]*  -> MVToplevelDecs
+
+lexical restrictions
+  MVMID MVToplevelDecs -/- [a-zA-Z0-9]
+
+variables
+  MVMID          -> MID          {prefer}
+  MVToplevelDecs -> ToplevelDecs {prefer} // TopleveDec+
+
+inductive definitions
+  S-Header:
+    C |- tlds => Ci
+    --------------------------
+    C |- module mid tlds => Ci
+
+  S-Import:
+    Cimp = interface(mid)
+    C1 = C + Cimp
+    C1 |- tlds => Ci
+    --------------------------
+    C |- import mid tlds => Ci
+
+  // TODO bld: import only
+
+  S-DefCons:
+    x notin dom(C)
+    C |- t : T
+    C,x:T |- tlds => C1
+    Ci = {},x:T + C1
+    ----------------------
+    C |- x = t; tlds => Ci
+
+  S-DefNil:
+    ----------
+    C |- => {}
+
+  // F-Empty:
+  //   ---------------
+  //   x notin dom({})
+
+  // F-Cons:
+  //   (x =/= y) (x notin dom(C))
+  //   --------------------------
+  //   x notin dom(C,y:T)
+
+  U-Empty:
+    ----------
+    C = C + {}
+
+  U-Cons:
+    C0 = C1 + C2
+    x notin dom(C0)
+    --------------------
+    C0,x:T = C1 + C2,x:T
+
+extension begin ExtensionBegin
+extension end ExtensionEnd
+
+context-free syntax
+  "extension" "{" -> ExtensionBegin
+  "}"             -> ExtensionEnd
+
+interface for tlds is Ci derived by {} |- tlds => Ci
