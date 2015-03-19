@@ -1,11 +1,11 @@
 Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
-Bundle-Name: org.sugarj.language.stlc
-Bundle-SymbolicName: org.sugarj.language.stlc;singleton:=true
+Bundle-Name: org.sugarj.language.stlcweak
+Bundle-SymbolicName: org.sugarj.language.stlcweak;singleton:=true
 Bundle-Version: 1.2.0.qualifier
-Export-Package: org.sugarj.stlc
+Export-Package: org.sugarj.stlcweak
 Bundle-ActivationPolicy: lazy
-Bundle-Activator: org.sugarj.stlc.Activator
+Bundle-Activator: org.sugarj.stlcweak.Activator
 Require-Bundle: org.eclipse.ui,
  org.eclipse.core.runtime,
  org.spoofax.terms,
