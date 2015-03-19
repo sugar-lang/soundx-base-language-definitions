@@ -154,7 +154,7 @@ judgement forms
   { Env "|-" ToplevelDecs "=>" Env }     // Witout lists
   // { Env "|-" ToplevelDec+ "=">" Env } // With lists
   { Env "=" Env "+" Env }
-  { ID "notin" "dom" "(" Env ")" }
+  // { ID "notin" "dom" "(" Env ")" }
 
 lexical syntax
   "mid" [a-zA-Z0-9]*   -> MVMID
