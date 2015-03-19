@@ -1,5 +1,5 @@
 # Eclipse-generated stuff
-/bin/
-/.metadata/
-/.cache/
-/.sugarjcache/
+/lang-stlc/bin/
+/lang-stlc/.metadata/
+/lang-stlc/.cache/
+/lang-stlc/.sugarjcache/
