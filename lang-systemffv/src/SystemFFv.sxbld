@@ -1,0 +1,117 @@
+base language definition SystemFFv
+
+base file extension sff
+extensible file extension xsff
+
+lexical syntax
+  [\ \t\r\n] -> LAYOUT
+
+  "//" ~[\n\r]* ([\n\r] | EOF) -> LAYOUT
+                               -> EOF
+
+context-free restrictions
+  LAYOUT? -/- [\ \t\r\n]
+  LAYOUT? -/- [\/] . [\/]
+
+lexical restrictions
+  EOF -/- ~[]
+
+lexical syntax
+  [0-9][0-9]*          -> NAT
+  [a-zA-Z][a-zA-Z0-9]* -> ID {sx-atoms(IDSet)}
+
+lexical restrictions
+  NAT -/- [0-9]
+  ID  -/- [a-zA-Z0-9]
+
+lexical syntax
+  "Nat"         -> PrimitiveType
+  PrimitiveType -> ID  {reject}
+  PrimitiveType -> MID {reject}
+
+context-free syntax 
+  ID                        -> Term {cons("Var")}
+  "\\" ID ":" Type "." Term -> Term {cons("Abs")}
+  Term Term                 -> Term {cons("App"), left}
+  "\\" ID "." Term          -> Term {cons("TAbs")}
+  Term "[" Type "]"         -> Term {cons("TApp")}
+  NAT                       -> Term {cons("Nat")}
+  Term "+" Term             -> Term {cons("Add"), left}
+  "(" Term ")"              -> Term {bracket}
+
+context-free priorities
+  Term Term                   -> Term >
+  Term "+" Term               -> Term >
+  { "\\" ID ":" Type "." Term -> Term
+    "\\" ID "." Term          -> Term }
+
+context-free syntax
+  "Nat"             -> Type
+  Type "->" Type    -> Type {right}
+  "\\/" ID "." Type -> Type
+  "(" Type ")"      -> Type {bracket} 
+
+context-free priorities
+  Type "->" Type    -> Type >
+  "\\/" ID "." Type -> Type
+
+lexical syntax
+  "x" [a-zA-Z0-9]* -> MVID
+  "y" [a-zA-Z0-9]* -> MVID
+  "n" [a-zA-Z0-9]* -> MVNAT
+  "t" [a-zA-Z0-9]* -> MVTerm
+  "S" [a-zA-Z0-9]* -> MVType
+  "T" [a-zA-Z0-9]* -> MVType
+
+lexical restrictions
+  MVID MVNAT MVTerm MVType -/- [a-zA-Z0-9]
+
+variables
+  MVID   -> ID    {prefer}
+  MVNAT  -> NAT   {prefer}
+  MVTerm -> Term  {prefer}
+  MVType -> Type  {prefer}
+
+context-free syntax
+  "{}"                -> Env
+  Env "," ID          -> Env 
+  Env "," ID ":" Type -> Env
+
+lexical syntax
+  "C" [a-zA-Z0-9]* -> MVEnv
+  "X" [a-zA-Z0-9]* -> MVIDSet
+
+lexical restrictions
+  MVEnv   -/- [a-zA-Z0-9]
+  MVIDSet -/- [a-zA-Z0-9]
+
+variables
+  MVEnv   -> Env   {prefer}
+  MVIDSet -> IDSet {prefer}
+
+judgement forms 
+  { Env "|-" Term ":" Type }
+  { ID "notin" "dom" "(" Env ")" }
+  { "dom" "(" Env ")" "=" IDSet }
+
+inductive definitions
+  D-Empty:
+    ------------
+    dom({}) = {}
+  D-Cons:
+    dom(C) = X
+    ----------------------
+    dom(C,x:T) = X U { x }
+
+  E-Fresh:
+    (dom(C) = X) (x notin X)
+    ------------------------
+    x notin dom(C)
+
+judgement forms
+  { "fv" "(" Type ")" "=" IDSet }
+
+inductive definitions
+  FV-Nat:
+  	------------
+  	fv(Nat) = {}
