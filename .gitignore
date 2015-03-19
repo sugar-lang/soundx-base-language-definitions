@@ -3,3 +3,7 @@
 /lang-stlc/.metadata/
 /lang-stlc/.cache/
 /lang-stlc/.sugarjcache/
+/lang-bogus/bin/
+/lang-bogus/.metadata/
+/lang-bogus/.cache/
+/lang-bogus/.sugarjcache/

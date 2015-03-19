@@ -1,0 +1,62 @@
+base language definition Bogus
+
+base file extension bogus
+extensible file extension xbogus
+
+lexical syntax
+  [\ \t\r\n] -> LAYOUT
+
+  "//" ~[\n\r]* ([\n\r] | EOF) -> LAYOUT
+                               -> EOF
+
+context-free restrictions
+  LAYOUT? -/- [\ \t\r\n]
+  LAYOUT? -/- [\/] . [\/]
+
+lexical restrictions
+  EOF -/- ~[]
+
+lexical syntax
+  [a-zA-Z][a-zA-Z0-9]* -> MID {sx-namespace-flat}
+
+lexical syntax
+  "import" -> Keyword
+
+context-free syntax
+  "module" mid:MID -> Header {sx-namespace-dec(mid)}
+  "import" mid:MID -> Import {sx-import-dec(mid)}
+  "bogusdef"       -> Def    {sx-body-dec}
+
+context-free syntax
+  "OK" -> Ok
+
+lexical syntax
+  "tlds" [a-zA-Z0-9]*  -> MVToplevelDecs
+
+lexical restrictions
+  MVToplevelDecs -/- [a-zA-Z0-9]
+
+variables
+  MVToplevelDecs -> ToplevelDecs {prefer}
+
+context-free syntax
+  "extension" "{" -> ExtensionBegin
+  "}"             -> ExtensionEnd
+
+toplevel declaration ToplevelDec
+toplevel declarations ToplevelDecs
+
+interface Ok
+
+judgement forms
+  { "|-" ToplevelDecs Ok }
+
+inductive definitions
+  S-Module:
+    ----------
+    |- tlds OK
+
+extension begin ExtensionBegin
+extension end ExtensionEnd
+
+interface for tlds is OK derived by |- tlds OK
