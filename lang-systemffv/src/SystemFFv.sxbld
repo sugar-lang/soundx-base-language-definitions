@@ -47,6 +47,7 @@ context-free priorities
 
 context-free syntax
   "Nat"             -> Type
+  ID                -> Type
   Type "->" Type    -> Type {right}
   "\\/" ID "." Type -> Type
   "(" Type ")"      -> Type {bracket} 
@@ -98,10 +99,14 @@ inductive definitions
   D-Empty:
     ------------
     dom({}) = {}
-  D-Cons:
+  D-TmVar:
     dom(C) = X
-    ----------------------
-    dom(C,x:T) = X U { x }
+    --------------------
+    dom(C,x:T) = X U {x}
+  D-TyVar:
+  	dom(C) = X
+  	------------------
+  	dom(C,x) = X U {x}
 
   E-Fresh:
     (dom(C) = X) (x notin X)
@@ -115,3 +120,143 @@ inductive definitions
   FV-Nat:
   	------------
   	fv(Nat) = {}
+  FV-TyVar:
+  	-----------
+  	fv(x) = {x}
+  FV-Arrow:
+  	(fv(T1) = X1) (fv(T2) = X2)
+  	---------------------------
+  	fv(T1 -> T2) = X1 U X2
+  FV-Forall:
+  	fv(T) = X
+  	-------------------
+  	fv(\/x.T) = X \ {x}
+
+judgement forms
+  { "[" ID "|->" Type "]" "(" Type ")" "=" Type }
+
+inductive definitions
+  SUB-Nat:
+  	------------------
+  	[x|->S](Nat) = Nat
+  SUB-TyVar1:
+  	--------------
+  	[x|->S](x) = S
+  SUB-TyVar2:
+  	x =/= y
+  	--------------
+  	[x|->S](y) = y
+  SUB-Arrow:
+  	([x|->S](T1) = S1) ([x|->S](T2) = S2)
+  	-------------------------------------
+  	[x|->S](T1->T2) = S1->S2
+  SUB-Forall:
+  	(fv(S) = XS) (fv(T) = XT) (y1 notin XS U XT U {x}) ([y|->y1](T) = T1) ([x|->S](T1) = S1)
+  	----------------------------------------------------------------------------------------
+  	[x|->S](\/y.T) = \/y1.S1
+
+judgement forms
+  { Env "|-" Term ":" Type }
+
+inductive definitions
+  T-Nat:
+  	------------
+  	C |- n : Nat
+  T-Var:
+  	--------------
+  	C,x:T |- x : T
+  T-Weak:
+  	(C |- t : T) (y notin dom(C))
+  	-----------------------------
+  	C,y:S |- t : T
+  T-Abs:
+  	C,x:T1 |- t : T2
+  	---------------------
+  	C |- \x:T1.t : T1->T2
+  T-App:
+  	(C |- t1 : T1->T2) (C |- t2 : T1)
+  	---------------------------------
+  	C |- t1 t2 : T2
+  T-TAbs:
+  	C,x |- t : T
+  	-----------------
+  	C |- \x.t : \/x.T
+  T-TApp:
+  	(C |- t : \/x.S) ([x|->T](S) = S1)
+  	----------------------------------
+  	C |- t [T] : S1
+
+lexical syntax
+  [a-zA-Z][a-zA-Z0-9]* -> MID {sx-namespace-flat}
+
+lexical syntax
+  "import" -> Keyword
+  Keyword  -> ID  {reject}
+  Keyword  -> MID {reject}
+
+context-free syntax
+  "module" mid:MID -> Header {sx-namespace-dec(mid)}
+
+  "import" mid:MID -> Import {sx-import-dec(mid)}
+
+  ID "=" Term ";" -> Def {sx-body-dec}
+
+toplevel declaration ToplevelDec
+toplevel declarations ToplevelDecs
+
+interface Env
+
+judgement forms
+  { Env "|-" ToplevelDecs "=>" Env }
+  { Env "=" Env "+" Env }
+
+lexical syntax
+  "mid" [a-zA-Z0-9]*  -> MVMID
+  "tlds" [a-zA-Z0-9]* -> MVToplevelDecs
+
+lexical restrictions
+  MVMID MVToplevelDecs -/- [a-zA-Z0-9]
+
+variables
+  MVMID          -> MID          {prefer}
+  MVToplevelDecs -> ToplevelDecs {prefer}
+
+inductive definitions
+  S-Header: 
+    C |- tlds => Ci
+    --------------------------
+    C |- module mid tlds => Ci
+  S-Import:
+    Cimp = interface(mid)
+    C1 = C + Cimp
+    C1 |- tlds => Ci
+    --------------------------
+    C |- import mid tlds => Ci
+  S-DefCons:
+    x notin dom(C)
+    C |- t : T
+    C,x:T |- tlds => C1
+    Ci = {},x:T + C1
+    ----------------------
+    C |- x = t; tlds => Ci
+  S-DefNil:
+    ----------
+    C |- => {}
+
+  U-Empty:
+    ----------
+    C = C + {}
+  U-Cons:
+    C0 = C1 + C2
+    x notin dom(C0)
+    --------------------
+    C0,x:T = C1 + C2,x:T
+
+extension begin ExtensionBegin
+extension end ExtensionEnd
+
+context-free syntax
+  "extension" "{" -> ExtensionBegin
+  "}"             -> ExtensionEnd
+
+interface for tlds is Ci derived by {} |- tlds => Ci
