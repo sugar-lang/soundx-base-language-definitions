@@ -59,6 +59,7 @@ context-free priorities
 lexical syntax
   "x" [a-zA-Z0-9]* -> MVID
   "y" [a-zA-Z0-9]* -> MVID
+  "z" [a-zA-Z0-9]* -> MVID
   "n" [a-zA-Z0-9]* -> MVNAT
   "t" [a-zA-Z0-9]* -> MVTerm
   "S" [a-zA-Z0-9]* -> MVType
@@ -80,80 +81,127 @@ context-free syntax
 
 lexical syntax
   "C" [a-zA-Z0-9]* -> MVEnv
-  "X" [a-zA-Z0-9]* -> MVIDSet
 
 lexical restrictions
-  MVEnv   -/- [a-zA-Z0-9]
-  MVIDSet -/- [a-zA-Z0-9]
+  MVEnv -/- [a-zA-Z0-9]
 
 variables
-  MVEnv   -> Env   {prefer}
-  MVIDSet -> IDSet {prefer}
+  MVEnv -> Env {prefer}
 
 judgement forms 
   { Env "|-" Term ":" Type }
   { ID "notin" "dom" "(" Env ")" }
-  { "dom" "(" Env ")" "=" IDSet }
 
 inductive definitions
-  D-Empty:
-    ------------
-    dom({}) = {}
-  D-TmVar:
-    dom(C) = X
-    --------------------
-    dom(C,x:T) = X U {x}
-  D-TyVar:
-  	dom(C) = X
-  	------------------
-  	dom(C,x) = X U {x}
+  F-Empty:
+    ---------------
+    x notin dom({})
 
-  E-Fresh:
-    (dom(C) = X) (x notin X)
-    ------------------------
-    x notin dom(C)
+  F-Var:
+    (x =/= y) (x notin dom(C))
+    --------------------------
+    x notin dom(C,y:T)
+
+context-free syntax
+  "[]"          -> IDList
+  ID "," IDList -> IDList
+
+variables
+  "X" [a-zA-Z0-9]* -> MVIDList
+
+lexical restrictions
+  MVIDList -/- [a-zA-Z0-9]
+
+variables
+  MVIDList -> IDList {prefer}
+
 
 judgement forms
-  { "fv" "(" Type ")" "=" IDSet }
+  { "fv" "(" Type ")" "=" IDList }
+  { IDList "U" IDList "=" IDList }
+  { IDList "\\" ID = IDList }
+  { ID "notin" IDList }
+  { ID "notin" "fv" "(" Type ")" }
 
 inductive definitions
+  NE-Empty:
+    ----------
+    x notin []
+  NE-Cons:
+    (x =/= y) (x notin X)
+    ---------------------
+    x notin y,X
+  E-Eq:
+    --------
+    x in x,X
+  E-Neq:
+    (x =\= y) (x in X)
+    ------------------
+    x in y,X
+  U-Empty:
+    ----------
+    [] U X = X
+  U-ConsNE:
+    (X1 U X2 = X) (x notin X)
+    -------------------------
+    x,X1 U X2 = x,X
+  U-ConsEL
+    (X1 U X2 = X) (x in X)
+    ----------------------
+    x,X1 U X2 = X
+  D-Eq:
+    -----------
+    x,X \ x = X
+  D-Neq
+    (x =/= y) (X \ x = X1)
+    ----------------------
+    y,X \ x = X1
+  D-Empty:
+    -----------
+    [] \ x = []
   FV-Nat:
-  	------------
-  	fv(Nat) = {}
+    ------------
+    fv(Nat) = {}
   FV-TyVar:
-  	-----------
-  	fv(x) = {x}
+    -----------
+    fv(x) = {x}
   FV-Arrow:
-  	(fv(T1) = X1) (fv(T2) = X2)
-  	---------------------------
-  	fv(T1 -> T2) = X1 U X2
+    (fv(T1) = X1) (fv(T2) = X2) (X1 U X2 = X)
+    -----------------------------------------
+    fv(T1 -> T2) = X
   FV-Forall:
-  	fv(T) = X
-  	-------------------
-  	fv(\/x.T) = X \ {x}
+    (fv(T) = X) (X \ x = X1)
+    ------------------------
+    fv(\/x.T) = X1
+  Fresh:
+    (fv(T) = X) (x notin X)
+    -----------------------
+    x notin fv(T)
+
+fresh x:ID in T:Type by x notin fv(T)
 
 judgement forms
   { "[" ID "|->" Type "]" "(" Type ")" "=" Type }
 
 inductive definitions
   SUB-Nat:
-  	------------------
-  	[x|->S](Nat) = Nat
+    ------------------
+    [x|->S](Nat) = Nat
   SUB-TyVar1:
-  	--------------
-  	[x|->S](x) = S
+    --------------
+    [x|->S](x) = S
   SUB-TyVar2:
-  	x =/= y
-  	--------------
-  	[x|->S](y) = y
+    x =/= y
+    --------------
+    [x|->S](y) = y
   SUB-Arrow:
-  	([x|->S](T1) = S1) ([x|->S](T2) = S2)
-  	-------------------------------------
-  	[x|->S](T1->T2) = S1->S2
+    ([x|->S](T1) = S1) ([x|->S](T2) = S2)
+    -------------------------------------
+    [x|->S](T1->T2) = S1->S2
   SUB-Forall:
-  	(fv(S) = XS) (fv(T) = XT) (y1 notin XS U XT U {x}) ([y|->y1](T) = T1) ([x|->S](T1) = S1)
-  	----------------------------------------------------------------------------------------
-  	[x|->S](\/y.T) = \/y1.S1
+    (z = fresh(S,T,x)) ([y|->z](T) = T1) ([x|->S](T1) = S1)
+    -------------------------------------------------------
+    [x|->S](\/y.T) = \/z.S1
 
 judgement forms
   { Env "|-" Term ":" Type }
