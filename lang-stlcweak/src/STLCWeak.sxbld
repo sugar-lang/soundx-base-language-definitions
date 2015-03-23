@@ -1,8 +1,5 @@
 base language definition STLCWeak
 
-base file extension stw
-extensible file extension xstw
-
 lexical syntax
   [\ \t\r\n] -> LAYOUT
 
@@ -83,21 +80,18 @@ variables
 judgement forms 
   { Env "|-" Term ":" Type }
   { ID "notin" "dom" "(" Env ")" }
-  { "dom" "(" Env ")" "=" IDSet }
+
+fresh x : ID in C : Env by x notin dom(C)
 
 inductive definitions
-  D-Empty:
-    ------------
-    dom({}) = {}
-  D-Cons:
-    dom(C) = X
-    ----------------------
-    dom(C,x:T) = X U { x }
+  F-Empty:
+    ---------------
+    x notin dom({})
 
-  E-Fresh:
-    (dom(C) = X) (x notin X)
-    ------------------------
-    x notin dom(C)
+  F-Var:
+    (x =/= y) (x notin dom(C))
+    --------------------------
+    x notin dom(C,y:T)
 
   T-Var:
     --------------
@@ -121,6 +115,7 @@ inductive definitions
     (C |- t1 : Nat) (C |- t2 : Nat)
     -------------------------------
     C |- t1 + t2 : Nat
+
 
 lexical syntax
   [a-zA-Z][a-zA-Z0-9]* -> MID {sx-namespace-flat}
@@ -221,3 +216,6 @@ context-free syntax
   "}"             -> ExtensionEnd
 
 interface for tlds is Ci derived by {} |- tlds => Ci
+
+base file extension stw
+extensible file extension xstw
