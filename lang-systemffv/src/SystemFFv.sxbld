@@ -18,7 +18,7 @@ lexical restrictions
 
 lexical syntax
   [0-9][0-9]*          -> NAT
-  [a-zA-Z][a-zA-Z0-9]* -> ID {sx-atoms(IDSet)}
+  [a-zA-Z][a-zA-Z0-9]* -> ID {sx-atoms}
 
 lexical restrictions
   NAT -/- [0-9]
@@ -106,7 +106,7 @@ context-free syntax
   "[]"          -> IDList
   ID "," IDList -> IDList
 
-variables
+lexical syntax
   "X" [a-zA-Z0-9]* -> MVIDList
 
 lexical restrictions
@@ -115,12 +115,12 @@ lexical restrictions
 variables
   MVIDList -> IDList {prefer}
 
-
 judgement forms
   { "fv" "(" Type ")" "=" IDList }
   { IDList "U" IDList "=" IDList }
-  { IDList "\\" ID = IDList }
+  { IDList "\\" ID "=" IDList }
   { ID "notin" IDList }
+  { ID "in" IDList }
   { ID "notin" "fv" "(" Type ")" }
 
 inductive definitions
@@ -135,7 +135,7 @@ inductive definitions
     --------
     x in x,X
   E-Neq:
-    (x =\= y) (x in X)
+    (x =/= y) (x in X)
     ------------------
     x in y,X
   U-Empty:
@@ -145,26 +145,27 @@ inductive definitions
     (X1 U X2 = X) (x notin X)
     -------------------------
     x,X1 U X2 = x,X
-  U-ConsEL
+  U-ConsEL:
     (X1 U X2 = X) (x in X)
     ----------------------
     x,X1 U X2 = X
   D-Eq:
-    -----------
-    x,X \ x = X
-  D-Neq
+    X \ x = X1
+    ------------
+    x,X \ x = X1
+  D-Neq:
     (x =/= y) (X \ x = X1)
     ----------------------
-    y,X \ x = X1
+    y,X \ x = y,X1
   D-Empty:
     -----------
     [] \ x = []
   FV-Nat:
     ------------
-    fv(Nat) = {}
+    fv(Nat) = []
   FV-TyVar:
-    -----------
-    fv(x) = {x}
+    ------------
+    fv(x) = x,[]
   FV-Arrow:
     (fv(T1) = X1) (fv(T2) = X2) (X1 U X2 = X)
     -----------------------------------------
@@ -213,10 +214,14 @@ inductive definitions
   T-Var:
   	--------------
   	C,x:T |- x : T
-  T-Weak:
+  T-WeakTerm:
   	(C |- t : T) (y notin dom(C))
   	-----------------------------
   	C,y:S |- t : T
+  T-WeakType:
+        (C |- t : T) (y notin dom(C))
+        -----------------------------
+        C,y |- t : T
   T-Abs:
   	C,x:T1 |- t : T2
   	---------------------
@@ -291,10 +296,10 @@ inductive definitions
     ----------
     C |- => {}
 
-  U-Empty:
+  UE-Empty:
     ----------
     C = C + {}
-  U-Cons:
+  UE-Cons:
     C0 = C1 + C2
     x notin dom(C0)
     --------------------
