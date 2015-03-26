@@ -38,11 +38,11 @@ context-free priorities
   Term Term                 -> Term >
   Term "+" Term             -> Term >
   "\\" ID ":" Type "." Term -> Term
-  
+
 context-free syntax
-  "Nat"          -> Type
-  Type "->" Type -> Type {right}
-  "(" Type ")"   -> Type {bracket} 
+  "Nat"          -> Type {cons("TyNat")}
+  Type "->" Type -> Type {cons("TyArrow"), right}
+  "(" Type ")"   -> Type {bracket}
 
 lexical syntax
   "x" [a-zA-Z0-9]* -> MVID
@@ -79,6 +79,7 @@ variables
   
 judgement forms 
   { Env "|-" Term ":" Type }
+  { ID ":" Type "in" Env }
   { ID "notin" "dom" "(" Env ")" }
 
 fresh x : ID in C : Env by x notin dom(C)
@@ -87,19 +88,23 @@ inductive definitions
   F-Empty:
     ---------------
     x notin dom({})
-
   F-Var:
     (x =/= y) (x notin dom(C))
     --------------------------
     x notin dom(C,y:T)
 
+  L-Found:
+    ------------
+    x:T in C,x:T
+  L-Next:
+    (x=/=y) (x:T in C)
+    ------------------
+    x:T in C,y:S
+    
   T-Var:
-    --------------
-    C,x:T |- x : T
-  T-Weak:
-    (C |- t : T) (y notin dom(C))
-    -----------------------------
-    C,y:S |- t : T
+    x:T in C
+    ----------
+    C |- x : T
   T-Nat:
     ------------
     C |- n : Nat
@@ -115,7 +120,10 @@ inductive definitions
     (C |- t1 : Nat) (C |- t2 : Nat)
     -------------------------------
     C |- t1 + t2 : Nat
-
+  T-Weak:
+    (C |- t : T) (y notin dom(C))
+    -----------------------------
+    C,y:S |- t : T
 
 lexical syntax
   [a-zA-Z][a-zA-Z0-9]* -> MID {sx-namespace-flat}
@@ -137,19 +145,14 @@ context-free syntax
 
   ID "=" Term ";" -> Def {sx-body-dec}
 
-// With lists:
-// toplevel declaration ToplevelDec
-// Without lists:
 toplevel declaration ToplevelDec
 toplevel declarations ToplevelDecs
 
 interface Env
 
 judgement forms
-  { Env "|-" ToplevelDecs "=>" Env }     // Witout lists
-  // { Env "|-" ToplevelDec+ "=">" Env } // With lists
+  { Env "|-" ToplevelDecs "=>" Env }
   { Env "=" Env "+" Env }
-  // { ID "notin" "dom" "(" Env ")" }
 
 lexical syntax
   "mid" [a-zA-Z0-9]*   -> MVMID
@@ -160,7 +163,7 @@ lexical restrictions
 
 variables
   MVMID          -> MID          {prefer}
-  MVToplevelDecs -> ToplevelDecs {prefer} // TopleveDec+
+  MVToplevelDecs -> ToplevelDecs {prefer}
 
 inductive definitions
   S-Header:
@@ -175,8 +178,6 @@ inductive definitions
     --------------------------
     C |- import mid tlds => Ci
 
-  // TODO bld: import only
-
   S-DefCons:
     x notin dom(C)
     C |- t : T
@@ -188,15 +189,6 @@ inductive definitions
   S-DefNil:
     ----------
     C |- => {}
-
-  // F-Empty:
-  //   ---------------
-  //   x notin dom({})
-
-  // F-Cons:
-  //   (x =/= y) (x notin dom(C))
-  //   --------------------------
-  //   x notin dom(C,y:T)
 
   U-Empty:
     ----------
