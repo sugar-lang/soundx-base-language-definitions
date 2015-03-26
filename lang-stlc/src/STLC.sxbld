@@ -18,7 +18,7 @@ lexical restrictions
 
 lexical syntax
   [0-9][0-9]*          -> NAT
-  [a-zA-Z][a-zA-Z0-9]* -> ID {sx-atoms(IDSet)}
+  [a-zA-Z][a-zA-Z0-9]* -> ID {sx-atoms}
 
 lexical restrictions
   NAT -/- [0-9]
@@ -78,16 +78,21 @@ variables
   MVEnv -> Env {prefer}
   
 judgement forms 
-  { Env "|-" Term ":" Type } 
+  { Env "|-" Term ":" Type }
+  { ID ":" Type "in" Env }
 
 inductive definitions
+  L-Found:
+    ------------
+    x:T in C,x:T
+  L-Next:
+    (x=/=y) (x:T in C)
+    ------------------
+    x:T in C,y:S
   T-Var:
-    --------------
-    C,x:T |- x : T
-  T-VarWeak:
-    (x =/= y) (C |- x : T)
-    ----------------------
-    C,y:S |- x : T
+    x:T in C
+    ----------
+    C |- x : T
   T-Nat:
     ------------
     C |- n : Nat
