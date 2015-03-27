@@ -206,38 +206,48 @@ inductive definitions
 
 judgement forms
   { Env "|-" Term ":" Type }
+  { ID ":" Type "in" Env }
 
 inductive definitions
+  L-Found:
+    ------------
+    x:T in C,x:T
+  L-Next:
+    (x=/=y) (x:T in C)
+    ------------------
+    x:T in C,y:S
+
   T-Nat:
-  	------------
-  	C |- n : Nat
+    ------------
+    C |- n : Nat
   T-Var:
-  	--------------
-  	C,x:T |- x : T
-  T-WeakTerm:
-  	(C |- t : T) (y notin dom(C))
-  	-----------------------------
-  	C,y:S |- t : T
-  T-WeakType:
-        (C |- t : T) (y notin dom(C))
-        -----------------------------
-        C,y |- t : T
+    x:T in C
+    ----------
+    C |- x : T
   T-Abs:
-  	C,x:T1 |- t : T2
-  	---------------------
-  	C |- \x:T1.t : T1->T2
+    C,x:T1 |- t : T2
+    ---------------------
+    C |- \x:T1.t : T1->T2
   T-App:
-  	(C |- t1 : T1->T2) (C |- t2 : T1)
-  	---------------------------------
-  	C |- t1 t2 : T2
+    (C |- t1 : T1->T2) (C |- t2 : T1)
+    ---------------------------------
+    C |- t1 t2 : T2
   T-TAbs:
-  	C,x |- t : T
-  	-----------------
-  	C |- \x.t : \/x.T
+    C,x |- t : T
+    -----------------
+    C |- \x.t : \/x.T
   T-TApp:
-  	(C |- t : \/x.S) ([x|->T](S) = S1)
-  	----------------------------------
-  	C |- t [T] : S1
+    (C |- t : \/x.S) ([x|->T](S) = S1)
+    ----------------------------------
+    C |- t [T] : S1
+  T-WeakTerm:
+    (C |- t : T) (y notin dom(C))
+    -----------------------------
+    C,y:S |- t : T
+  T-WeakType:
+    (C |- t : T) (y notin dom(C))
+    -----------------------------
+    C,y |- t : T
 
 lexical syntax
   [a-zA-Z][a-zA-Z0-9]* -> MID {sx-namespace-flat}
