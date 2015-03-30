@@ -1,8 +1,5 @@
 base language definition STLC
 
-base file extension st
-extensible file extension xst
-
 lexical syntax
   [\ \t\r\n] -> LAYOUT
 
@@ -43,9 +40,9 @@ context-free priorities
   "\\" ID ":" Type "." Term -> Term
   
 context-free syntax
-  "Nat"          -> Type
-  Type "->" Type -> Type {right}
-  "(" Type ")"   -> Type {bracket} 
+  "Nat"          -> Type {cons("TyNat")}
+  Type "->" Type -> Type {cons("TyArrow"), right}
+  "(" Type ")"   -> Type {bracket}
 
 lexical syntax
   "x" [a-zA-Z0-9]* -> MVID
@@ -114,32 +111,22 @@ lexical syntax
 
 lexical syntax
   "import" -> Keyword
-  "only"   -> Keyword
+  "module" -> Keyword
   Keyword  -> ID  {reject}
   Keyword  -> MID {reject}
 
 context-free syntax
-  "module" mid:MID -> Header {sx-namespace-dec(mid)}
+  "module" mid:MID ";" -> Header {sx-namespace-dec(mid)}
+  "import" mid:MID ";" -> Import {sx-import-dec(mid)}
+  ID "=" Term ";"      -> Def    {sx-body-dec}
 
-  "import" mid:MID                 -> Import {sx-import-dec(mid)}
-  "import" mid:MID "only" OnlyList -> Import {sx-import-dec(mid)}
-
-  MID          -> OnlyList
-  MID OnlyList -> OnlyList
-
-  ID "=" Term ";" -> Def {sx-body-dec}
-
-// With lists:
-// toplevel declaration ToplevelDec
-// Without lists:
 toplevel declaration ToplevelDec
 toplevel declarations ToplevelDecs
 
 interface Env
 
 judgement forms
-  { Env "|-" ToplevelDecs "=>" Env }     // Witout lists
-  // { Env "|-" ToplevelDec+ "=">" Env } // With lists
+  { Env "|-" ToplevelDecs "=>" Env }
   { Env "=" Env "+" Env }
   { ID "notin" "dom" "(" Env ")" }
 
@@ -152,22 +139,20 @@ lexical restrictions
 
 variables
   MVMID          -> MID          {prefer}
-  MVToplevelDecs -> ToplevelDecs {prefer} // TopleveDec+
+  MVToplevelDecs -> ToplevelDecs {prefer}
 
 inductive definitions
   S-Header:
     C |- tlds => Ci
-    --------------------------
-    C |- module mid tlds => Ci
+    ---------------------------
+    C |- module mid; tlds => Ci
 
   S-Import:
     Cimp = interface(mid)
     C1 = C + Cimp
     C1 |- tlds => Ci
-    --------------------------
-    C |- import mid tlds => Ci
-
-  // TODO bld: import only
+    ---------------------------
+    C |- import mid; tlds => Ci
 
   S-DefCons:
     x notin dom(C)
@@ -200,8 +185,6 @@ inductive definitions
     --------------------
     C0,x:T = C1 + C2,x:T
 
-// TODO bld: define x notin dom(C), C = C1 + C2
-
 extension begin ExtensionBegin
 extension end ExtensionEnd
 
@@ -210,3 +193,6 @@ context-free syntax
   "}"             -> ExtensionEnd
 
 interface for tlds is Ci derived by {} |- tlds => Ci
+
+base file extension st
+extensible file extension xst

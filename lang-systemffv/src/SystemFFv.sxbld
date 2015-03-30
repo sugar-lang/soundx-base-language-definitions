@@ -1,8 +1,5 @@
 base language definition SystemFFv
 
-base file extension sff
-extensible file extension xsff
-
 lexical syntax
   [\ \t\r\n] -> LAYOUT
 
@@ -46,11 +43,11 @@ context-free priorities
     "\\" ID "." Term          -> Term }
 
 context-free syntax
-  "Nat"             -> Type
-  ID                -> Type
-  Type "->" Type    -> Type {right}
-  "\\/" ID "." Type -> Type
-  "(" Type ")"      -> Type {bracket} 
+  "Nat"             -> Type {cons("TyNat")}
+  ID                -> Type {cons("TyVar")}
+  Type "->" Type    -> Type {cons("TyFun"), right}
+  "\\/" ID "." Type -> Type {cons("TyForall")}
+  "(" Type ")"      -> Type {bracket}
 
 context-free priorities
   Type "->" Type    -> Type >
@@ -69,10 +66,10 @@ lexical restrictions
   MVID MVNAT MVTerm MVType -/- [a-zA-Z0-9]
 
 variables
-  MVID   -> ID    {prefer}
-  MVNAT  -> NAT   {prefer}
-  MVTerm -> Term  {prefer}
-  MVType -> Type  {prefer}
+  MVID   -> ID   {prefer}
+  MVNAT  -> NAT  {prefer}
+  MVTerm -> Term {prefer}
+  MVType -> Type {prefer}
 
 context-free syntax
   "{}"                -> Env
@@ -254,15 +251,14 @@ lexical syntax
 
 lexical syntax
   "import" -> Keyword
+  "module" -> Keyword
   Keyword  -> ID  {reject}
   Keyword  -> MID {reject}
 
 context-free syntax
-  "module" mid:MID -> Header {sx-namespace-dec(mid)}
-
-  "import" mid:MID -> Import {sx-import-dec(mid)}
-
-  ID "=" Term ";" -> Def {sx-body-dec}
+  "module" mid:MID ";" -> Header {sx-namespace-dec(mid)}
+  "import" mid:MID ";" -> Import {sx-import-dec(mid)}
+  ID "=" Term ";"      -> Def    {sx-body-dec}
 
 toplevel declaration ToplevelDec
 toplevel declarations ToplevelDecs
@@ -287,14 +283,14 @@ variables
 inductive definitions
   S-Header: 
     C |- tlds => Ci
-    --------------------------
-    C |- module mid tlds => Ci
+    ---------------------------
+    C |- module mid; tlds => Ci
   S-Import:
     Cimp = interface(mid)
     C1 = C + Cimp
     C1 |- tlds => Ci
-    --------------------------
-    C |- import mid tlds => Ci
+    ---------------------------
+    C |- import mid; tlds => Ci
   S-DefCons:
     x notin dom(C)
     C |- t : T
@@ -323,3 +319,6 @@ context-free syntax
   "}"             -> ExtensionEnd
 
 interface for tlds is Ci derived by {} |- tlds => Ci
+
+base file extension sff
+extensible file extension xsff
