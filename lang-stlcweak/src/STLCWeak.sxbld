@@ -77,9 +77,15 @@ variables
   MVIDSet -> IDSet {prefer}
   
 judgement forms 
-  { Env "|-" Term ":" Type }
-  { ID ":" Type "in" Env }
-  { ID "notin" "dom" "(" Env ")" }
+  { Env "|-" t:Term ":" T:Type
+    error message "Required type %T%"
+          location t }
+  { x:ID ":" T:Type "in" Env
+    error message "Required %x% of type %T%"
+          location x }
+  { x:ID "notin" "dom" "(" Env ")"
+    error message "Duplicate %x%"
+          location x }
 
 fresh x : ID in C : Env by x notin dom(C)
 

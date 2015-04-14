@@ -75,17 +75,21 @@ variables
   MVEnv -> Env {prefer}
   
 judgement forms 
-  { Env "|-" Term ":" Type }
-  { ID ":" Type "in" Env }
+  { Env "|-" t:Term ":" T:Type
+    error message "Required type %T%"
+          location t }
+  { x:ID ":" T:Type "in" Env
+    error message "Required %x% of type %T%"
+          location x }
 
 inductive definitions
-  L-Found:
-    ------------
-    x:T in C,x:T
   L-Next:
     (x=/=y) (x:T in C)
     ------------------
     x:T in C,y:S
+  L-Found:
+    ------------
+    x:T in C,x:T
   T-Var:
     x:T in C
     ----------
