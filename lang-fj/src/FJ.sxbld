@@ -1,0 +1,15 @@
+base language definition FJ
+
+lexical syntax
+  [\ \t\r\n] -> LAYOUT
+
+  "//" ~[\n\r]* ([\n\r] | EOF) -> LAYOUT
+                               -> EOF
+
+context-free restrictions
+  LAYOUT? -/- [\ \t\r\n]
+  LAYOUT? -/- [\/] . [\/]
+
+lexical restrictions
+  EOF -/- ~[]
+
