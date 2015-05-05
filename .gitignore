@@ -19,3 +19,7 @@
 /lang-fj/.metadata/
 /lang-fj/.cache/
 /lang-fj/.sugarjcache/
+/lang-bogus-nested/bin/
+/lang-bogus-nested/.metadata/
+/lang-bogus-nested/.cache/
+/lang-bogus-nested/.sugarjcache/ 
