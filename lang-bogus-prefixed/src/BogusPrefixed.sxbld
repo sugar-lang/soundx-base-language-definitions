@@ -1,7 +1,7 @@
-base language definition BogusNested
+base language definition BogusPrefixed
 
-base file extension bognest
-extensible file extension xbognest
+base file extension bogprf
+extensible file extension xbogprf
 
 lexical syntax
   [\ \t\r\n] -> LAYOUT
@@ -18,7 +18,7 @@ lexical restrictions
 
 lexical syntax
   [a-zA-Z][a-zA-Z0-9]* -> MIDPART
-  { MIDPART "." }+     -> MID {sx-namespace-nested(".")}
+  { MIDPART "." }+     -> MID {sx-namespace-prefixed(".")}
 
 lexical syntax
   "import" -> Keyword
@@ -26,7 +26,8 @@ lexical syntax
 context-free syntax
   "module" mid:MID -> Header {sx-namespace-dec(mid)}
   "import" mid:MID -> Import {sx-import-dec(mid)}
-  "bogusdef"       -> Def    {sx-body-dec}
+  
+  "bogusdefs" midp:MIDPART "{" "innerdef"* "}" -> Def {sx-body-dec, sx-namespace-suffix(midp)}
 
 context-free syntax
   "OK" -> Ok
@@ -41,8 +42,8 @@ variables
   MVToplevelDecs -> ToplevelDecs {prefer}
 
 context-free syntax
-  "extension" "{" -> ExtensionBegin
-  "}"             -> ExtensionEnd
+  "extension" midp:MIDPART "{" -> ExtensionBegin {sx-namespace-suffix(midp)}
+  "}"                          -> ExtensionEnd
 
 toplevel declaration ToplevelDec
 toplevel declarations ToplevelDecs
