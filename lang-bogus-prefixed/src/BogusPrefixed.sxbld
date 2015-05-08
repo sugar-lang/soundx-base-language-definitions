@@ -1,0 +1,63 @@
+base language definition BogusNested
+
+base file extension bognest
+extensible file extension xbognest
+
+lexical syntax
+  [\ \t\r\n] -> LAYOUT
+
+  "//" ~[\n\r]* ([\n\r] | EOF) -> LAYOUT
+                               -> EOF
+
+context-free restrictions
+  LAYOUT? -/- [\ \t\r\n]
+  LAYOUT? -/- [\/] . [\/]
+
+lexical restrictions
+  EOF -/- ~[]
+
+lexical syntax
+  [a-zA-Z][a-zA-Z0-9]* -> MIDPART
+  { MIDPART "." }+     -> MID {sx-namespace-nested(".")}
+
+lexical syntax
+  "import" -> Keyword
+
+context-free syntax
+  "module" mid:MID -> Header {sx-namespace-dec(mid)}
+  "import" mid:MID -> Import {sx-import-dec(mid)}
+  "bogusdef"       -> Def    {sx-body-dec}
+
+context-free syntax
+  "OK" -> Ok
+
+lexical syntax
+  "tlds" [a-zA-Z0-9]*  -> MVToplevelDecs
+
+lexical restrictions
+  MVToplevelDecs -/- [a-zA-Z0-9]
+
+variables
+  MVToplevelDecs -> ToplevelDecs {prefer}
+
+context-free syntax
+  "extension" "{" -> ExtensionBegin
+  "}"             -> ExtensionEnd
+
+toplevel declaration ToplevelDec
+toplevel declarations ToplevelDecs
+
+interface Ok
+
+judgement forms
+  { "|-" ToplevelDecs Ok }
+
+inductive definitions
+  S-Module:
+    ----------
+    |- tlds OK
+
+extension begin ExtensionBegin
+extension end ExtensionEnd
+
+interface for tlds is OK derived by |- tlds OK
