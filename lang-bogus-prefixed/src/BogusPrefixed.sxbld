@@ -24,8 +24,8 @@ lexical syntax
   "import" -> Keyword
 
 context-free syntax
-  "module" mid:MID -> Header {sx-namespace-dec(mid)}
-  "import" mid:MID -> Import {sx-import-dec(mid)}
+  "package" mid:MID -> Header {sx-namespace-dec(mid)}
+  "import" mid:MID  -> Import {sx-import-dec(mid)}
   
   "bogusdefs" midp:MIDPART "{" "innerdef"* "}" -> Def {sx-body-dec, sx-namespace-suffix(midp)}
 
