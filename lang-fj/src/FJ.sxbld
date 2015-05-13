@@ -13,3 +13,195 @@ context-free restrictions
 lexical restrictions
   EOF -/- ~[]
 
+// Identifiers
+lexical syntax
+  [a-zA-Z][a-zA-Z0-9]* -> ID {sx-atoms}
+
+lexical restrictions
+  ID -/- [a-zA-Z0-9]
+
+// Keywords
+lexical syntax
+  "class"   -> Keyword
+  "public"  -> Keyword
+  "private" -> Keyword
+  "extends" -> Keyword
+  "void"    -> Keyword
+  "super"   -> Keyword
+  "return"  -> Keyword
+  "null"    -> Keyword
+  Keyword   -> ID {reject}
+
+// Types
+lexical syntax
+  "int"         -> PrimitiveType
+  "boolean"     -> PrimitiveType
+  PrimitiveType -> ID {reject}
+
+context-free syntax
+  PrimitiveType -> Type
+  ClassType     -> Type
+  ID            -> Type
+  
+  ID               -> ClassType
+  ID "<" Types ">" -> ClassType
+  
+  Type           -> Types
+  Type "," Types -> Types
+
+// Classes
+context-free syntax
+  "public" "class" id:ID ClassBody                            -> Class {sx-body-dec, sx-namespace-suffix(id)}
+  "public" "class" id:ID "extends" ClassType                  -> Class {sx-body-dec, sx-namespace-suffix(id)}
+  "public" "class" id:ID "<" TypeVars ">"                     -> Class {sx-body-dec, sx-namespace-suffix(id)}
+  "public" "class" id:ID "<" TypeVars ">" "extends" ClassType -> Class {sx-body-dec, sx-namespace-suffix(id)}
+
+  "{" Fields Constructor Methods "}" -> ClassBody
+
+// Fields
+context-free syntax
+  "private" Type ID ";" -> Field
+  
+               -> Fields
+  Field Fields -> Fields
+
+// Constructors
+context-free syntax
+  "public" ID "(" Parameters ")" ConstructorBody -> Constructor
+  
+  "{" "super" "(" Arguments ")" ";" Assignments "}" -> ConstructorBody
+  "{" Assignments "}"                               -> ConstructorBody
+
+// Methods
+  "public" Type ID "(" Parameters ")" MethodBody   -> Method
+  "public" "void" ID "(" Parameters ")" MethodBody -> Method
+  
+  "{" Statements "}" -> MethodBody
+
+                 -> Methods
+  Method Methods -> Methods
+  
+// Parameters
+context-free syntax
+  Type ID -> Parameter
+  
+                           -> Parameters
+  Parameter "," Parameters -> Parameters
+
+// Statements
+context-free syntax
+  VarDecl                                      -> Statement
+  Assignment                                   -> Statement
+  MethodCall ";"                               -> Statement
+  "while" "(" Expr ")" Statement               -> Statement
+  "if" "(" Expr ")" Statement                  -> Statement
+  "if" "(" Expr ")" Statement "else" Statement -> Statement
+  "{" Statements "}"                           -> Statement
+  "return" Expr ";"                            -> Statement
+
+                       -> Statements
+  Statement Statements -> Statements
+
+// Assignments and variable declarations
+context-free syntax
+  VarRef "=" Expr ";" -> Assignment
+  
+                         -> Assignments
+  Assignment Assignments -> Assignments
+
+  Type "ID" "=" Expr ";" -> VarDecl
+  Type "ID" ";"          -> VarDecl
+
+// Method calls
+context-free syntax
+  ID "(" Arguments ")"          -> MethodCall
+  Expr "." ID "(" Arguments ")" -> MethodCall
+
+                     -> Arguments
+  Expr "," Arguments -> Arguments
+
+// Expressions
+context-free syntax
+  ID            -> VarRef
+  "this" "." ID -> VarRef
+
+  "null"         -> Expr
+  VarRef         -> Expr
+  "this"         -> Expr
+  MethodCall     -> Expr
+  Expr "+" Expr  -> Expr {left}
+  Expr "-" Expr  -> Expr {left}
+  Expr "*" Expr  -> Expr {left}
+  Expr "/" Expr  -> Expr {left}
+  Expr "&&" Expr -> Expr {left}
+  Expr "||" Expr -> Expr {left}
+  "!" Expr       -> Expr
+  Expr "<" Expr  -> Expr {non-assoc}
+  Expr "<=" Expr -> Expr {non-assoc}
+  Expr "==" Expr -> Expr {non-assoc}
+  Expr "!=" Expr -> Expr {non-assoc}
+  Expr ">=" Expr -> Expr {non-assoc}
+  Expr ">" Expr  -> Expr {non-assoc}
+  "(" Expr ")"   -> Expr {bracket}
+
+context-free priorities
+  { "!" Expr       -> Expr } >
+  { Expr "*" Expr  -> Expr
+    Expr "/" Expr  -> Expr } >
+  { Expr "+" Expr  -> Expr 
+    Expr "-" Expr  -> Expr } >
+  { Expr "<" Expr  -> Expr
+    Expr "<=" Expr -> Expr
+    Expr ">=" Expr -> Expr
+    Expr ">" Expr  -> Expr } >
+  { Expr "==" Expr -> Expr 
+    Expr "!=" Expr -> Expr } >
+  { Expr "&&" Expr -> Expr } >
+  { Expr "||" Expr -> Expr }
+
+// Package declarations
+lexical syntax
+  { ID "." }+ -> PID {sx-namespace-prefixed(".")}
+
+context-free syntax
+  "package" pid:PID ";" -> Package {sx-namespace-dec(pid)}
+
+// Import declarations
+lexical syntax
+  PID "." ID -> QID
+
+context-free syntax
+  "import" qid:QID ";" -> Import {sx-import-dec(qid)}
+
+// Toplevel structure
+toplevel declaration ToplevelDec
+toplevel declarations ToplevelDecs
+
+context-free syntax
+  "public" "extension" id:ID "{" -> ExtensionBegin {sx-namespace-suffix(id)}
+  "}"                            -> ExtensionEnd
+
+extension begin ExtensionBegin 
+extension end ExtensionEnd
+
+// Interface judgement
+context-free syntax
+  "OK" -> Ok
+
+interface Ok
+
+variables
+  "tlds" [a-zA-Z0-9]* -> ToplevelDecs
+
+judgement forms
+  { "|-" ToplevelDecs Ok }
+
+inductive definitions
+  CompilationUnit:
+    ----------
+    |- tlds OK
+
+interface for tlds is OK derived by |- tlds OK
+
+base file extension fj
+extensible file extension xfj
