@@ -22,15 +22,17 @@ lexical restrictions
 
 // Keywords
 lexical syntax
-  "class"   -> Keyword
-  "public"  -> Keyword
-  "private" -> Keyword
-  "extends" -> Keyword
-  "void"    -> Keyword
-  "super"   -> Keyword
-  "return"  -> Keyword
-  "null"    -> Keyword
-  Keyword   -> ID {reject}
+  "class"     -> Keyword
+  "public"    -> Keyword
+  "private"   -> Keyword
+  "extends"   -> Keyword
+  "void"      -> Keyword
+  "super"     -> Keyword
+  "return"    -> Keyword
+  "null"      -> Keyword
+  "new"       -> Keyword
+  "extension" -> Keyword
+  Keyword     -> ID {reject}
 
 // Types
 lexical syntax
@@ -40,23 +42,29 @@ lexical syntax
 
 context-free syntax
   PrimitiveType -> Type
-  ClassType     -> Type
+  GenClass      -> Type
   ID            -> Type
   
-  ID               -> ClassType
-  ID "<" Types ">" -> ClassType
+  ID "<" Types ">" -> GenClass
   
   Type           -> Types
   Type "," Types -> Types
 
+  ID              -> TypeVars
+  ID "," TypeVars -> TypeVars
+
 // Classes
 context-free syntax
-  "public" "class" id:ID ClassBody                            -> Class {sx-body-dec, sx-namespace-suffix(id)}
-  "public" "class" id:ID "extends" ClassType                  -> Class {sx-body-dec, sx-namespace-suffix(id)}
-  "public" "class" id:ID "<" TypeVars ">"                     -> Class {sx-body-dec, sx-namespace-suffix(id)}
-  "public" "class" id:ID "<" TypeVars ">" "extends" ClassType -> Class {sx-body-dec, sx-namespace-suffix(id)}
+  "public" "class" id:ID ClassBody                                       -> Class {sx-body-dec, sx-namespace-suffix(id)}
+  "public" "class" id:ID "extends" SuperClass ClassBody                  -> Class {sx-body-dec, sx-namespace-suffix(id)}
+  "public" "class" id:ID "<" TypeVars ">" ClassBody                      -> Class {sx-body-dec, sx-namespace-suffix(id)}
+  "public" "class" id:ID "<" TypeVars ">" "extends" SuperClass ClassBody -> Class {sx-body-dec, sx-namespace-suffix(id)}
+
+  GenClass -> SuperClass
+  ID       -> SuperClass
 
   "{" Fields Constructor Methods "}" -> ClassBody
+  "{" Fields Methods "}"             -> ClassBody
 
 // Fields
 context-free syntax
@@ -67,14 +75,14 @@ context-free syntax
 
 // Constructors
 context-free syntax
-  "public" ID "(" Parameters ")" ConstructorBody -> Constructor
+  "public" ID Parameters ConstructorBody -> Constructor
   
-  "{" "super" "(" Arguments ")" ";" Assignments "}" -> ConstructorBody
+  "{" "super" Arguments ";" Assignments "}" -> ConstructorBody
   "{" Assignments "}"                               -> ConstructorBody
 
 // Methods
-  "public" Type ID "(" Parameters ")" MethodBody   -> Method
-  "public" "void" ID "(" Parameters ")" MethodBody -> Method
+  "public" Type ID Parameters MethodBody   -> Method
+  "public" "void" ID Parameters MethodBody -> Method
   
   "{" Statements "}" -> MethodBody
 
@@ -85,8 +93,10 @@ context-free syntax
 context-free syntax
   Type ID -> Parameter
   
-                           -> Parameters
-  Parameter "," Parameters -> Parameters
+  "(" ")"                     -> Parameters
+  "(" ParameterList ")"       -> Parameters
+  Parameter                   -> ParameterList
+  Parameter "," ParameterList -> ParameterList
 
 // Statements
 context-free syntax
@@ -109,40 +119,50 @@ context-free syntax
                          -> Assignments
   Assignment Assignments -> Assignments
 
-  Type "ID" "=" Expr ";" -> VarDecl
-  Type "ID" ";"          -> VarDecl
+  Type ID "=" Expr ";" -> VarDecl
+  Type ID ";"          -> VarDecl
 
 // Method calls
 context-free syntax
-  ID "(" Arguments ")"          -> MethodCall
-  Expr "." ID "(" Arguments ")" -> MethodCall
+  ID Arguments          -> MethodCall
+  Expr "." ID Arguments -> MethodCall
 
-                     -> Arguments
-  Expr "," Arguments -> Arguments
+  "(" ")"               -> Arguments
+  "(" ArgumentList ")"  -> Arguments
+  Expr                  -> ArgumentList
+  Expr "," ArgumentList -> ArgumentList
 
-// Expressions
+lexical syntax
+  [0-9][0-9]* -> DIGITS
+  "-" DIGITS  -> INT
+  "+" DIGITS  -> INT
+  DIGITS      -> INT
+
 context-free syntax
   ID            -> VarRef
   "this" "." ID -> VarRef
 
-  "null"         -> Expr
-  VarRef         -> Expr
-  "this"         -> Expr
-  MethodCall     -> Expr
-  Expr "+" Expr  -> Expr {left}
-  Expr "-" Expr  -> Expr {left}
-  Expr "*" Expr  -> Expr {left}
-  Expr "/" Expr  -> Expr {left}
-  Expr "&&" Expr -> Expr {left}
-  Expr "||" Expr -> Expr {left}
-  "!" Expr       -> Expr
-  Expr "<" Expr  -> Expr {non-assoc}
-  Expr "<=" Expr -> Expr {non-assoc}
-  Expr "==" Expr -> Expr {non-assoc}
-  Expr "!=" Expr -> Expr {non-assoc}
-  Expr ">=" Expr -> Expr {non-assoc}
-  Expr ">" Expr  -> Expr {non-assoc}
-  "(" Expr ")"   -> Expr {bracket}
+  INT                              -> Expr
+  "null"                           -> Expr
+  VarRef                           -> Expr
+  "this"                           -> Expr
+  MethodCall                       -> Expr
+  "new" ID Arguments               -> Expr
+  "new" ID "<" Types ">" Arguments -> Expr
+  Expr "+" Expr                    -> Expr {left}
+  Expr "-" Expr                    -> Expr {left}
+  Expr "*" Expr                    -> Expr {left}
+  Expr "/" Expr                    -> Expr {left}
+  Expr "&&" Expr                   -> Expr {left}
+  Expr "||" Expr                   -> Expr {left}
+  "!" Expr                         -> Expr
+  Expr "<" Expr                    -> Expr {non-assoc}
+  Expr "<=" Expr                   -> Expr {non-assoc}
+  Expr "==" Expr                   -> Expr {non-assoc}
+  Expr "!=" Expr                   -> Expr {non-assoc}
+  Expr ">=" Expr                   -> Expr {non-assoc}
+  Expr ">" Expr                    -> Expr {non-assoc}
+  "(" Expr ")"                     -> Expr {bracket}
 
 context-free priorities
   { "!" Expr       -> Expr } >
@@ -203,5 +223,5 @@ inductive definitions
 
 interface for tlds is OK derived by |- tlds OK
 
-base file extension fj
+base file extension java
 extensible file extension xfj
