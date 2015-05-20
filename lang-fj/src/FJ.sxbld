@@ -360,88 +360,105 @@ judgement forms
   { ClassTable "+" ID "|->" QID ":" ClassType "=" ClassTable } // TODO
   { ID "notin" "dom" "(" ClassTable ")" } // TODO
   { "disjoint" "(" TypeVars1 ")" "=" TypeVars } // TODO
+  { ID "in" TypeVars } // TODO
+  { ID "notin" TypeVars } // TODO
+  { "|" TypeVars "|" "=" "|" ATypes "|" } // TODO
+  { ClassTable "(" ID ")" "=" ClassType } // TODO
+  { "qualify" "(" ClassTable "," ID ")" "=" QID } // TODO
   { "msigs" "(" ClassTable "," TypeVars "," AType "," ClassBody ")" "=" MethSigs } // TODO
-  { "conparams" "(" ClassTable "," ID "," TypeVars "," ClassBody ")" "=" ATypes } // TODO
-  { "normSuperClass" "(" ClassTable "," TypeVars "," SuperClass ")" "=" AType } // TODO
-  { "normPrimParams" "(" ClassTable "," TypeVars "," Parameters ")" "=" ATypes } // TODO
-  { "normPrimParamsTail" "(" ClassTable "," TypeVars "," Parameters ")" "=" ATypes } // TODO
-  { "normPrim" "(" ClassTable "," TypeVars "," Type ")" "=" AType } // TODO
-  { "normPrim" "(" ClassTable "," TypeVars "," Types1 ")" "=" ATypes } // TODO
-  { "norm" "(" ClassTable "," TypeVars "," Type ")" "=" AType } // TODO
-  { "norm" "(" ClassTable "," TypeVars "," Types1 ")" "=" ATypes } // TODO
+  { "conparams" "(" ClassTable "," ID "," TypeVars "," ClassBody ")" "=" ATypes }
+  { "normSuperClass" "(" ClassTable "," TypeVars "," SuperClass ")" "=" AType }
+  { "normPrimParams" "(" ClassTable "," TypeVars "," Parameters ")" "=" ATypes }
+  { "normPrimParamsTail" "(" ClassTable "," TypeVars "," ParametersTail ")" "=" ATypes }
+  { "normPrim" "(" ClassTable "," TypeVars "," Type ")" "=" AType }
+  { "normListPrim" "(" ClassTable "," TypeVars "," Types1 ")" "=" ATypes } // TODO
+  { "norm" "(" ClassTable "," TypeVars "," Type ")" "=" AType }
+  { "normList" "(" ClassTable "," TypeVars "," Types1 ")" "=" ATypes }
   { ClassTable "|-" ClassBody "OK" } // TODO
 
 inductive definitions
   // Toplevel declarations
   TL-Package:
-  	CT | pkg |- tld* => M
-  	----------------------------
-  	CT |- package pkg; tld* => M
+    CT | pkg |- tld* => M
+    ----------------------------
+    CT |- package pkg; tld* => M
   
   TLP-Import:
-  	suffix(q) = c
-  	CT + c |-> q = CT1
-  	CT1 | pkg |- tld* => M
-  	-------------------------------
-  	CT | pkg |- import q; tld* => M
+    suffix(q) = c
+    CT + c |-> q = CT1
+    CT1 | pkg |- tld* => M
+    -------------------------------
+    CT | pkg |- import q; tld* => M
 
   TLP-ClassMonObj:
-  	c notin dom(CT)
-  	msigs(CT, [], Object, cbody) = msig*
-  	conparams(CT, c, [], cbody) = t*
-  	concat(pkg, c) = q
-  	CT + c |-> q : {t*, msig*, Object, []} = CT1
-  	CT1 |- cbody OK
-  	-----------------------------------------------------------
-  	CT | pkg |- public class c cbody => {t*, msig*, Object, []}
+    c notin dom(CT)
+    msigs(CT, [], Object, cbody) = msig*
+    conparams(CT, c, [], cbody) = t*
+    concat(pkg, c) = q
+    CT + c |-> q : {t*, msig*, Object, []} = CT1
+    CT1 |- cbody OK
+    -----------------------------------------------------------
+    CT | pkg |- public class c cbody => {t*, msig*, Object, []}
 
   TLP-ClassMonSup:
-  	c notin dom(CT)
-  	normSuperClass(CT, X*, sc) = t
-  	msigs(CT, [], t, cbody) = msig*
-  	conparams(CT, c, [], cbody) = t*
-  	concat(pkg, c) = q
-  	CT + c |-> q : {t*, msig*, t, []} = CT1
-  	CT1 |- cbody OK
-  	-----------------------------------------------------------------
-  	CT | pkg |- public class c extends sc cbody => {t*, msig*, t, []}
+    c notin dom(CT)
+    normSuperClass(CT, X*, sc) = t
+    msigs(CT, [], t, cbody) = msig*
+    conparams(CT, c, [], cbody) = t*
+    concat(pkg, c) = q
+    CT + c |-> q : {t*, msig*, t, []} = CT1
+    CT1 |- cbody OK
+    -----------------------------------------------------------------
+    CT | pkg |- public class c extends sc cbody => {t*, msig*, t, []}
 
   TLP-ClassGenObj:
-  	c notin dom(CT)
-  	disjoint(X+) = X*
-  	msigs(CT, X*, Object, cbody) = msig*
-  	conparams(CT, c, X*, cbody) = t*
-  	concat(pkg, c) = q
-  	CT + c |-> q : {t*, msig*, Object, X*} = CT1
-  	CT1 |- cbody OK
-  	---------------------------------------------------------------
-  	CT | pkg |- public class c<X+> cbody => {t*, msig*, Object, X*}
+    c notin dom(CT)
+    disjoint(X+) = X*
+    msigs(CT, X*, Object, cbody) = msig*
+    conparams(CT, c, X*, cbody) = t*
+    concat(pkg, c) = q
+    CT + c |-> q : {t*, msig*, Object, X*} = CT1
+    CT1 |- cbody OK
+    ---------------------------------------------------------------
+    CT | pkg |- public class c<X+> cbody => {t*, msig*, Object, X*}
 
-  TLP-ClassGenSup:
-  	c notin dom(CT)
-  	disjoint(X+) = X*
-  	normSuperClass(CT, X*, sc) = t
-  	msigs(CT, X*, t, cbody) = msig*
-  	conparams(CT, c, X*, cbody) = t*
-  	concat(pkg, c) = q
-  	CT + c |-> q : {t*, msig*, t, X*} = CT1
-  	CT1 |- cbody OK
-  	---------------------------------------------------------------------
-  	CT | pkg |- public class c<X+> extends sc cbody => {t*, msig*, t, X*}
+TLP-ClassGenSup:
+    c notin dom(CT)
+    disjoint(X+) = X*
+    normSuperClass(CT, X*, sc) = t
+    msigs(CT, X*, t, cbody) = msig*
+    conparams(CT, c, X*, cbody) = t*
+    concat(pkg, c) = q
+    CT + c |-> q : {t*, msig*, t, X*} = CT1
+    CT1 |- cbody OK
+    ---------------------------------------------------------------------
+    CT | pkg |- public class c<X+> extends sc cbody => {t*, msig*, t, X*}
 
   TLP-Empty:
-  	-----------------
-  	CT | pkg |- => {}
+    -----------------
+    CT | pkg |- => {}
 
   // Constructor parameters
   CP-Implicit:
-  	---------------------------------------
-  	conparams(CT, c, X*, { fld* meth* }) = []
+     -----------------------------------------
+     conparams(CT, c, X*, { fld* meth* }) = []
 
   CP-Explicit:
-  	normPrimParams(CT, X*, p*) = t*
-  	-------------------------------------------------------------
-  	conparams(CT, c, X*, { fld* public c(p*) conbody meth* }) = t*
+     normPrimParams(CT, X*, p*) = t*
+     --------------------------------------------------------------
+     conparams(CT, c, X*, { fld* public c(p*) conbody meth* }) = t*
+
+  // Type normalization
+  // Parameters
+  NPP-Empty:
+    -----------------------------
+    normPrimParams(CT, X*, ) = []
+
+  NPP-NonEmpty:
+    normPrim(CT, X*, T) = t
+    normPrimParamsTail(CT, X*, p') = t*
+    ----------------------------------------
+    normPrimParams(CT, X*, T x p') = t :: t*
 
 
 
