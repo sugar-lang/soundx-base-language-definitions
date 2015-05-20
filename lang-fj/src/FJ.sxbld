@@ -351,20 +351,23 @@ variables
   MVVarContext      -> VarContext      {prefer}
   MVModuleInterface -> ModuleInterface {prefer}
 
+// Module system declarations
+interface ModuleInterface
+
 judgement forms
   { "suffix" "(" QID ")" "=" ID } // TODO must be provided by SoundX
   { "concat" "(" PID "," ID ")" "=" QID } // TODO must be provided by SoundX
   { ClassTable "|-" ToplevelDecs "=>" ModuleInterface }
   { ClassTable "|" PID "|-" ToplevelDecs "=>" ModuleInterface }
-  { ClassTable "+" ID "|->" QID "=" ClassTable } // TODO
-  { ClassTable "+" ID "|->" QID ":" ClassType "=" ClassTable } // TODO
-  { ID "notin" "dom" "(" ClassTable ")" } // TODO
-  { "disjoint" "(" TypeVars1 ")" "=" TypeVars } // TODO
-  { ID "in" TypeVars } // TODO
-  { ID "notin" TypeVars } // TODO
-  { "|" TypeVars "|" "=" "|" ATypes "|" } // TODO
-  { ClassTable "(" ID ")" "=" ClassType } // TODO
-  { "qualify" "(" ClassTable "," ID ")" "=" QID } // TODO
+  { ClassTable "+" ID "|->" QID "=" ClassTable }
+  { ClassTable "+" ID "|->" QID ":" ClassType "=" ClassTable }
+  { ID "notin" "dom" "(" ClassTable ")" }
+  { "disjoint" "(" TypeVars1 ")" "=" TypeVars }
+  { ID "in" TypeVars }
+  { ID "notin" TypeVars }
+  { "|" TypeVars "|" "=" "|" ATypes "|" }
+  { ClassTable "(" ID ")" "=" ClassType }
+  { "qualify" "(" ClassTable "," ID ")" "=" QID }
   { "msigs" "(" ClassTable "," TypeVars "," AType "," ClassBody ")" "=" MethSigs } // TODO
   { "conparams" "(" ClassTable "," ID "," TypeVars "," ClassBody ")" "=" ATypes }
   { "normSuperClass" "(" ClassTable "," TypeVars "," SuperClass ")" "=" AType }
@@ -460,8 +463,107 @@ TLP-ClassGenSup:
     ----------------------------------------
     normPrimParams(CT, X*, T x p') = t :: t*
 
+  // Class table handling
+  CTI-Imports:
+    ----------------------------
+    I* + c |-> q = c |-> q :: I*
 
+  CTI-ImportsClass:
+    ------------------------------------------------------------
+    I*, c0 |-> q0 : ct + c |-> q = c |-> q :: I*, c0 |-> q0 : ct
 
+  CTC-Imports:
+    ------------------------------------
+    I* + c |-> q : ct = I*, c |-> q : ct
+
+  CTD-Empty:
+    ---------------
+    c notin dom([])
+
+  CTD-ImportsClass:
+    (c =/= c0) (c notin dom(I*))
+    -------------------------------
+    c notin dom(I*, c0 |-> q0 : ct)
+
+  CTD-Imports:
+    (c =/= c0) (c notin dom(I*))
+    ----------------------------
+    c notin dom(c0 |-> q0 :: I*)
+
+  CTL-ImportFound:
+    ct = interface(q)
+    -------------------
+    c|->q :: I*(c) = ct
+
+  CTL-ImportNext:
+    (c0 =/= c) (I*(c) = ct)
+    -----------------------
+    c0|->q0 :: I*(c) = ct
+
+  CTL-ClassFound:
+    -------------------
+    I*,c|->q:ct(c) = ct
+
+  CTL-ClassNext:
+    (c0 =/= c) (I*(c) = ct)
+    -----------------------
+    I*,c0|->q0:ct(c) = ct
+
+  CTQ-ImportFound:
+    ---------------------------
+    qualify(c|->q :: I*, c) = q
+
+  CTQ-ImportNext:
+    (c0 =/= c) (qualify(I*, c) = q)
+    -------------------------------
+    qualify(c0|->q0 :: I*, c) = q
+
+  CTQ-ClassFound:
+    ----------------------------
+    qualify(I*, c|->q:ct, c) = q
+
+  CTQ-ClassNext:
+    (c0 =/= c) (qualify(I*, c) = q)
+    -------------------------------
+    qualify(I*, c0|->q0:ct, c) = q
+
+  // Type variables
+  TVD-Last:
+    ---------------------
+    disjoint(X) = X :: []
+
+  TVD-Cons:
+    (X notin X*) (disjoint(X+) = X*)
+    --------------------------------
+    disjoint(X, X+) = X :: X*
+
+  TVI-Found:
+    ------------
+    X in X :: X*
+
+  TVI-Next:
+    (X =/= Y) (X in X*)
+    -------------------
+    X in Y :: X*
+
+  TVE-Empty:
+    ----------
+    X notin []
+
+  TVE-Next:
+    (X =/= Y) (X notin X*)
+    ----------------------
+    X notin Y :: X*
+
+  TVL-Empty:
+  	-----------
+  	|[]| = |[]|
+
+  TVL-NotEmpty:
+  	|X*| = |t*|
+  	-----------------
+  	|X::X*| = |t::t*|
+ 
 // Extension declarations
 context-free syntax
   "public" "extension" c:ID "{" -> ExtensionBegin {sx-namespace-suffix(c)}
@@ -469,9 +571,6 @@ context-free syntax
 
 extension begin ExtensionBegin 
 extension end ExtensionEnd
-
-// Module system declarations
-interface ModuleInterface
 
 interface for tld* is M derived by [] |- tld* => M
 
