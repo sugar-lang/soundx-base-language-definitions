@@ -15,7 +15,8 @@ lexical restrictions
 
 // Identifiers
 lexical syntax
-  [a-zA-Z][a-zA-Z0-9]* -> ID {sx-atoms}
+  [a-zA-Z0-9]*       -> ALPHANUMS
+  [a-zA-Z] ALPHANUMS -> ID {sx-atoms}
 
 lexical restrictions
   ID -/- [a-zA-Z0-9]
@@ -45,20 +46,20 @@ context-free syntax
   GenClass      -> Type
   ID            -> Type
   
-  ID "<" Types ">" -> GenClass
+  ID "<" Types1 ">" -> GenClass
   
-  Type           -> Types
-  Type "," Types -> Types
+  Type            -> Types1
+  Type "," Types1 -> Types1
 
-  ID              -> TypeVars
-  ID "," TypeVars -> TypeVars
+  ID               -> TypeVars1
+  ID "," TypeVars1 -> TypeVars1
 
 // Classes
 context-free syntax
-  "public" "class" id:ID ClassBody                                       -> Class {sx-body-dec, sx-namespace-suffix(id)}
-  "public" "class" id:ID "extends" SuperClass ClassBody                  -> Class {sx-body-dec, sx-namespace-suffix(id)}
-  "public" "class" id:ID "<" TypeVars ">" ClassBody                      -> Class {sx-body-dec, sx-namespace-suffix(id)}
-  "public" "class" id:ID "<" TypeVars ">" "extends" SuperClass ClassBody -> Class {sx-body-dec, sx-namespace-suffix(id)}
+  "public" "class" id:ID ClassBody                                        -> Class {sx-body-dec, sx-namespace-suffix(id)}
+  "public" "class" id:ID "extends" SuperClass ClassBody                   -> Class {sx-body-dec, sx-namespace-suffix(id)}
+  "public" "class" id:ID "<" TypeVars1 ">" ClassBody                      -> Class {sx-body-dec, sx-namespace-suffix(id)}
+  "public" "class" id:ID "<" TypeVars1 ">" "extends" SuperClass ClassBody -> Class {sx-body-dec, sx-namespace-suffix(id)}
 
   GenClass -> SuperClass
   ID       -> SuperClass
@@ -75,14 +76,14 @@ context-free syntax
 
 // Constructors
 context-free syntax
-  "public" ID Parameters ConstructorBody -> Constructor
+  "public" ID "(" Parameters ")" ConstructorBody -> Constructor
   
-  "{" "super" Arguments ";" Assignments "}" -> ConstructorBody
-  "{" Assignments "}"                               -> ConstructorBody
+  "{" "super" "(" Exprs ")" ";" Assignments "}" -> ConstructorBody
+  "{" Assignments "}"                           -> ConstructorBody
 
 // Methods
-  "public" Type ID Parameters MethodBody   -> Method
-  "public" "void" ID Parameters MethodBody -> Method
+  "public" Type ID "(" Parameters ")" MethodBody   -> Method
+  "public" "void" ID "(" Parameters ")" MethodBody -> Method
   
   "{" Statements "}" -> MethodBody
 
@@ -93,10 +94,10 @@ context-free syntax
 context-free syntax
   Type ID -> Parameter
   
-  "(" ")"                     -> Parameters
-  "(" ParameterList ")"       -> Parameters
-  Parameter                   -> ParameterList
-  Parameter "," ParameterList -> ParameterList
+                               -> Parameters
+  Parameter ParametersTail     -> Parameters
+                               -> ParametersTail
+  "," Parameter ParametersTail -> ParametersTail
 
 // Statements
 context-free syntax
@@ -124,13 +125,8 @@ context-free syntax
 
 // Method calls
 context-free syntax
-  ID Arguments          -> MethodCall
-  Expr "." ID Arguments -> MethodCall
-
-  "(" ")"               -> Arguments
-  "(" ArgumentList ")"  -> Arguments
-  Expr                  -> ArgumentList
-  Expr "," ArgumentList -> ArgumentList
+  Expr "." ID "(" Exprs ")" -> MethodCall
+  ID "(" Exprs ")" -> MethodCall
 
 lexical syntax
   [0-9][0-9]* -> DIGITS
@@ -142,27 +138,32 @@ context-free syntax
   ID            -> VarRef
   "this" "." ID -> VarRef
 
-  INT                              -> Expr
-  "null"                           -> Expr
-  VarRef                           -> Expr
-  "this"                           -> Expr
-  MethodCall                       -> Expr
-  "new" ID Arguments               -> Expr
-  "new" ID "<" Types ">" Arguments -> Expr
-  Expr "+" Expr                    -> Expr {left}
-  Expr "-" Expr                    -> Expr {left}
-  Expr "*" Expr                    -> Expr {left}
-  Expr "/" Expr                    -> Expr {left}
-  Expr "&&" Expr                   -> Expr {left}
-  Expr "||" Expr                   -> Expr {left}
-  "!" Expr                         -> Expr
-  Expr "<" Expr                    -> Expr {non-assoc}
-  Expr "<=" Expr                   -> Expr {non-assoc}
-  Expr "==" Expr                   -> Expr {non-assoc}
-  Expr "!=" Expr                   -> Expr {non-assoc}
-  Expr ">=" Expr                   -> Expr {non-assoc}
-  Expr ">" Expr                    -> Expr {non-assoc}
-  "(" Expr ")"                     -> Expr {bracket}
+  INT                                   -> Expr
+  "null"                                -> Expr
+  VarRef                                -> Expr
+  "this"                                -> Expr
+  MethodCall                            -> Expr
+  "new" ID "(" Exprs ")"                -> Expr
+  "new" ID "<" Types1 ">" "(" Exprs ")" -> Expr
+  Expr "+" Expr                         -> Expr {left}
+  Expr "-" Expr                         -> Expr {left}
+  Expr "*" Expr                         -> Expr {left}
+  Expr "/" Expr                         -> Expr {left}
+  Expr "&&" Expr                        -> Expr {left}
+  Expr "||" Expr                        -> Expr {left}
+  "!" Expr                              -> Expr
+  Expr "<" Expr                         -> Expr {non-assoc}
+  Expr "<=" Expr                        -> Expr {non-assoc}
+  Expr "==" Expr                        -> Expr {non-assoc}
+  Expr "!=" Expr                        -> Expr {non-assoc}
+  Expr ">=" Expr                        -> Expr {non-assoc}
+  Expr ">" Expr                         -> Expr {non-assoc}
+  "(" Expr ")"                          -> Expr {bracket}
+
+                     -> Exprs
+  Expr ExprsTail     -> Exprs
+                     -> ExprsTail
+  "," Expr ExprsTail -> ExprsTail
 
 context-free priorities
   { "!" Expr       -> Expr } >
@@ -184,44 +185,279 @@ lexical syntax
   { ID "." }+ -> PID {sx-namespace-prefixed(".")}
 
 context-free syntax
-  "package" pid:PID ";" -> Package {sx-namespace-dec(pid)}
+  "package" pkg:PID ";" -> Package {sx-namespace-dec(pkg)}
 
 // Import declarations
 lexical syntax
   PID "." ID -> QID
 
 context-free syntax
-  "import" qid:QID ";" -> Import {sx-import-dec(qid)}
+  "import" q:QID ";" -> Import {sx-import-dec(q)}
 
 // Toplevel structure
 toplevel declaration ToplevelDec
 toplevel declarations ToplevelDecs
 
+// Meta-variables
+lexical syntax 
+  "x" ALPHANUMS        -> MVVar
+  "y" ALPHANUMS        -> MVVar
+  "T" ALPHANUMS        -> MVType
+  "X" ALPHANUMS        -> MVTypeVar
+  "Y" ALPHANUMS        -> MVTypeVar
+  "T" ALPHANUMS "+"    -> MVTypes1
+  "X" ALPHANUMS "+"    -> MVTypeVars1
+  "c" ALPHANUMS        -> MVClassName
+  "k" ALPHANUMS        -> MVConstructorName
+  "pkg" ALPHANUMS      -> MVPID
+  "q" ALPHANUMS        -> MVQID
+  "cbody" ALPHANUMS    -> MVClassBody
+  "conbody" ALPHANUMS  -> MVConstructorBody
+  "fld" ALPHANUMS "*"  -> MVFields
+  "meth" ALPHANUMS "*" -> MVMethods
+  "p" ALPHANUMS "*"    -> MVParameters
+  "p" ALPHANUMS "'"    -> MVParametersTail
+  "sc" ALPHANUMS       -> MVSuperClass
+  "tld" ALPHANUMS "*"  -> MVToplevelDecs
+
+lexical restrictions
+  MVVar
+  MVType
+  MVTypeVar
+  MVClassName
+  MVConstructorName
+  MVPID
+  MVQID
+  MVClassBody
+  MVConstructorBody
+  MVSuperClass
+    -/- [a-zA-Z0-9]
+
+variables
+  MVVar             -> ID              {prefer}
+  MVType            -> Type            {prefer}
+  MVTypeVar         -> ID              {prefer}
+  MVTypes1          -> Types1          {prefer}
+  MVTypeVars1       -> TypeVars1       {prefer}
+  MVClassName       -> ID              {prefer}
+  MVConstructorName -> ID              {prefer}
+  MVPID             -> PID             {prefer}
+  MVQID             -> QID             {prefer}
+  MVClassBody       -> ClassBody       {prefer}
+  MVConstructorBody -> ConstructorBody {prefer}
+  MVFields          -> Fields          {prefer}
+  MVMethods         -> Methods         {prefer}
+  MVParameters      -> Parameters      {prefer}
+  MVParametersTail  -> ParametersTail  {prefer}
+  MVSuperClass      -> SuperClass      {prefer}
+  MVToplevelDecs    -> ToplevelDecs    {prefer}
+
+// Syntax internal to the type system
 context-free syntax
-  "public" "extension" id:ID "{" -> ExtensionBegin {sx-namespace-suffix(id)}
+  // Class signature
+  "OK" -> Ok
+
+  // Expression types
+  PrimitiveType -> AType
+  QID ATypes    -> AType
+  ID            -> AType
+  "Object"      -> AType
+
+  "[]"              -> ATypes
+  AType "::" ATypes -> ATypes
+
+  "[]"             -> TypeVars
+  ID "::" TypeVars -> TypeVars
+
+  // Method types and signatures
+  "void" -> RetType
+  AType  -> RetType
+
+  ATypes "->" RetType -> MethType
+
+  ID ":" MethType -> MethSig
+  
+  "[]"                  -> MethSigs
+  MethSig "::" MethSigs -> MethSigs
+
+  // Class types
+  "{" ATypes "," MethSigs "," AType "," TypeVars "}" -> ClassType
+
+  // Imports and class table
+  "[]"                      -> Imports
+  ID "|->" QID "::" Imports -> Imports
+
+  Imports                                -> ClassTable
+  Imports "," ID "|->" QID ":" ClassType -> ClassTable
+
+  // Field context
+  "[]" -> FieldContext
+  ID ":" AType "::" FieldContext -> FieldContext
+
+  // Variable context
+  "[]"                         -> VarContext
+  ID ":" AType "::" VarContext -> VarContext
+
+  // Module interface
+  ClassType -> ModuleInterface
+  "{}"      -> ModuleInterface
+
+lexical syntax
+  "Object" -> ID {reject}
+
+// Meta-variables
+lexical syntax
+  "t" ALPHANUMS       -> MVAType
+  "s" ALPHANUMS       -> MVAType
+  MVAType "*"         -> MVATypes
+  MVTypeVar "*"       -> MVTypeVars
+  "rt" ALPHANUMS      -> MVRetType
+  "mt" ALPHANUMS      -> MVMethType
+  "msig" ALPHANUMS    -> MVMethSig
+  MVMethSig "*"       -> MVMethSigs
+  "ct" ALPHANUMS      -> MVClassType
+  "I" ALPHANUMS "*"   -> MVImports
+  "CT" ALPHANUMS      -> MVClassTable
+  "Cf" ALPHANUMS      -> MVFieldContext
+  "Cv" ALPHANUMS      -> MVVarContext
+  "M" ALPHANUMS       -> MVModuleInterface
+
+lexical restrictions
+  MVAType
+  MVRetType
+  MVMethType
+  MVMethSig
+  MVClassType
+  MVType
+  MVClassTable
+  MVFieldContext
+  MVVarContext
+  MVModuleInterface
+    -/- [a-zA-Z0-9]
+
+variables
+  MVAType           -> AType           {prefer}
+  MVTypeVar         -> ID              {prefer}
+  MVATypes          -> ATypes          {prefer}
+  MVTypeVars        -> TypeVars        {prefer}
+  MVRetType         -> RetType         {prefer}
+  MVMethType        -> MethType        {prefer}
+  MVMethSig         -> MethSig         {prefer}
+  MVMethSigs        -> MethSigs        {prefer}
+  MVClassType       -> ClassType       {prefer}
+  MVImports         -> Imports         {prefer}
+  MVClassTable      -> ClassTable      {prefer}
+  MVFieldContext    -> FieldContext    {prefer}
+  MVVarContext      -> VarContext      {prefer}
+  MVModuleInterface -> ModuleInterface {prefer}
+
+judgement forms
+  { "suffix" "(" QID ")" "=" ID } // TODO must be provided by SoundX
+  { "concat" "(" PID "," ID ")" "=" QID } // TODO must be provided by SoundX
+  { ClassTable "|-" ToplevelDecs "=>" ModuleInterface }
+  { ClassTable "|" PID "|-" ToplevelDecs "=>" ModuleInterface }
+  { ClassTable "+" ID "|->" QID "=" ClassTable } // TODO
+  { ClassTable "+" ID "|->" QID ":" ClassType "=" ClassTable } // TODO
+  { ID "notin" "dom" "(" ClassTable ")" } // TODO
+  { "disjoint" "(" TypeVars1 ")" "=" TypeVars } // TODO
+  { "msigs" "(" ClassTable "," TypeVars "," AType "," ClassBody ")" "=" MethSigs } // TODO
+  { "conparams" "(" ClassTable "," ID "," TypeVars "," ClassBody ")" "=" ATypes } // TODO
+  { "normSuperClass" "(" ClassTable "," TypeVars "," SuperClass ")" "=" AType } // TODO
+  { "normPrimParams" "(" ClassTable "," TypeVars "," Parameters ")" "=" ATypes } // TODO
+  { "normPrimParamsTail" "(" ClassTable "," TypeVars "," Parameters ")" "=" ATypes } // TODO
+  { "normPrim" "(" ClassTable "," TypeVars "," Type ")" "=" AType } // TODO
+  { "normPrim" "(" ClassTable "," TypeVars "," Types1 ")" "=" ATypes } // TODO
+  { "norm" "(" ClassTable "," TypeVars "," Type ")" "=" AType } // TODO
+  { "norm" "(" ClassTable "," TypeVars "," Types1 ")" "=" ATypes } // TODO
+  { ClassTable "|-" ClassBody "OK" } // TODO
+
+inductive definitions
+  // Toplevel declarations
+  TL-Package:
+  	CT | pkg |- tld* => M
+  	----------------------------
+  	CT |- package pkg; tld* => M
+  
+  TLP-Import:
+  	suffix(q) = c
+  	CT + c |-> q = CT1
+  	CT1 | pkg |- tld* => M
+  	-------------------------------
+  	CT | pkg |- import q; tld* => M
+
+  TLP-ClassMonObj:
+  	c notin dom(CT)
+  	msigs(CT, [], Object, cbody) = msig*
+  	conparams(CT, c, [], cbody) = t*
+  	concat(pkg, c) = q
+  	CT + c |-> q : {t*, msig*, Object, []} = CT1
+  	CT1 |- cbody OK
+  	-----------------------------------------------------------
+  	CT | pkg |- public class c cbody => {t*, msig*, Object, []}
+
+  TLP-ClassMonSup:
+  	c notin dom(CT)
+  	normSuperClass(CT, X*, sc) = t
+  	msigs(CT, [], t, cbody) = msig*
+  	conparams(CT, c, [], cbody) = t*
+  	concat(pkg, c) = q
+  	CT + c |-> q : {t*, msig*, t, []} = CT1
+  	CT1 |- cbody OK
+  	-----------------------------------------------------------------
+  	CT | pkg |- public class c extends sc cbody => {t*, msig*, t, []}
+
+  TLP-ClassGenObj:
+  	c notin dom(CT)
+  	disjoint(X+) = X*
+  	msigs(CT, X*, Object, cbody) = msig*
+  	conparams(CT, c, X*, cbody) = t*
+  	concat(pkg, c) = q
+  	CT + c |-> q : {t*, msig*, Object, X*} = CT1
+  	CT1 |- cbody OK
+  	---------------------------------------------------------------
+  	CT | pkg |- public class c<X+> cbody => {t*, msig*, Object, X*}
+
+  TLP-ClassGenSup:
+  	c notin dom(CT)
+  	disjoint(X+) = X*
+  	normSuperClass(CT, X*, sc) = t
+  	msigs(CT, X*, t, cbody) = msig*
+  	conparams(CT, c, X*, cbody) = t*
+  	concat(pkg, c) = q
+  	CT + c |-> q : {t*, msig*, t, X*} = CT1
+  	CT1 |- cbody OK
+  	---------------------------------------------------------------------
+  	CT | pkg |- public class c<X+> extends sc cbody => {t*, msig*, t, X*}
+
+  TLP-Empty:
+  	-----------------
+  	CT | pkg |- => {}
+
+  // Constructor parameters
+  CP-Implicit:
+  	---------------------------------------
+  	conparams(CT, c, X*, { fld* meth* }) = []
+
+  CP-Explicit:
+  	normPrimParams(CT, X*, p*) = t*
+  	-------------------------------------------------------------
+  	conparams(CT, c, X*, { fld* public c(p*) conbody meth* }) = t*
+
+
+
+// Extension declarations
+context-free syntax
+  "public" "extension" c:ID "{" -> ExtensionBegin {sx-namespace-suffix(c)}
   "}"                            -> ExtensionEnd
 
 extension begin ExtensionBegin 
 extension end ExtensionEnd
 
-// Interface judgement
-context-free syntax
-  "OK" -> Ok
+// Module system declarations
+interface ModuleInterface
 
-interface Ok
+interface for tld* is M derived by [] |- tld* => M
 
-variables
-  "tlds" [a-zA-Z0-9]* -> ToplevelDecs
-
-judgement forms
-  { "|-" ToplevelDecs Ok }
-
-inductive definitions
-  CompilationUnit:
-    ----------
-    |- tlds OK
-
-interface for tlds is OK derived by |- tlds OK
-
+// File extensions
 base file extension java
 extensible file extension xfj
