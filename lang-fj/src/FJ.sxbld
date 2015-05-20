@@ -448,7 +448,7 @@ inductive definitions
 // Extension declarations
 context-free syntax
   "public" "extension" c:ID "{" -> ExtensionBegin {sx-namespace-suffix(c)}
-  "}"                            -> ExtensionEnd
+  "}"                           -> ExtensionEnd
 
 extension begin ExtensionBegin 
 extension end ExtensionEnd
