@@ -212,9 +212,11 @@ lexical syntax
   "pkg" ALPHANUMS      -> MVPID
   "q" ALPHANUMS        -> MVQID
   "cbody" ALPHANUMS    -> MVClassBody
+  "con" ALPHANUMS      -> MVConstructor
   "conbody" ALPHANUMS  -> MVConstructorBody
   "fld" ALPHANUMS "*"  -> MVFields
   "meth" ALPHANUMS "*" -> MVMethods
+  "mbody" ALPHANUMS    -> MVMethodBody
   "p" ALPHANUMS "*"    -> MVParameters
   "p" ALPHANUMS "'"    -> MVParametersTail
   "sc" ALPHANUMS       -> MVSuperClass
@@ -229,7 +231,9 @@ lexical restrictions
   MVPID
   MVQID
   MVClassBody
+  MVConstructor
   MVConstructorBody
+  MVMethodBody
   MVSuperClass
     -/- [a-zA-Z0-9]
 
@@ -244,9 +248,11 @@ variables
   MVPID             -> PID             {prefer}
   MVQID             -> QID             {prefer}
   MVClassBody       -> ClassBody       {prefer}
+  MVConstructor     -> Constructor     {prefer}  
   MVConstructorBody -> ConstructorBody {prefer}
   MVFields          -> Fields          {prefer}
   MVMethods         -> Methods         {prefer}
+  MVMethodBody      -> MethodBody      {prefer}
   MVParameters      -> Parameters      {prefer}
   MVParametersTail  -> ParametersTail  {prefer}
   MVSuperClass      -> SuperClass      {prefer}
@@ -297,6 +303,10 @@ context-free syntax
   // Variable context
   "[]"                         -> VarContext
   ID ":" AType "::" VarContext -> VarContext
+
+  // Method lookup result
+  "undef" -> MlookupRes
+  MethSig -> MlookupRes
 
   // Module interface
   ClassType -> ModuleInterface
@@ -369,6 +379,9 @@ judgement forms
   { ClassTable "(" ID ")" "=" ClassType }
   { "qualify" "(" ClassTable "," ID ")" "=" QID }
   { "msigs" "(" ClassTable "," TypeVars "," AType "," ClassBody ")" "=" MethSigs } // TODO
+  { "msigs" "(" ClassTable "," TypeVars "," AType "," Methods ")" "=" MethSigs } // TODO
+  { ID "undef" "in" MethSigs } // TODO
+  { "mlookup" "(" ClassTable "," AType "," ID ")" "=" MlookupResult } // TODO
   { "conparams" "(" ClassTable "," ID "," TypeVars "," ClassBody ")" "=" ATypes }
   { "normSuperClass" "(" ClassTable "," TypeVars "," SuperClass ")" "=" AType }
   { "normPrimParams" "(" ClassTable "," TypeVars "," Parameters ")" "=" ATypes }
@@ -451,6 +464,41 @@ TLP-ClassGenSup:
      --------------------------------------------------------------
      conparams(CT, c, X*, { fld* public c(p*) conbody meth* }) = t*
 
+  // Method signatures
+  MS-ConImplicit:
+  	msigs(CT, X*, t, meth*) = msig*
+  	----------------------------------------
+  	msigs(CT, X*, t, { fld* meth* }) = msig*
+
+  MS-ConExplicit:
+  	msigs(CT, X*, t, meth*) = msig*
+  	--------------------------------------------
+  	msigs(CT, X*, t, { fld* con meth* }) = msig*
+
+  MS-Empty:
+  	-----------------------
+  	msigs(CT, X*, t, ) = []
+
+  MS-Override:
+  	msigs(CT, X*, t, meth*) = msig*
+  	---
+  	msigs(CT, X*, t, public T m(p*) mbody meth*) = msig*
+
+  MS-NoOverride:
+  	msigs(CT, X*, t, meth*) = msig*
+  	---
+  	msigs(CT, X*, t, public T m(p*) mbody meth*) = msig*
+
+  MS-OverrideVoid:
+  	msigs(CT, X*, t, meth*) = msig*
+  	---
+  	msigs(CT, X*, t, public void m(p*) mbody meth*) = msig*
+
+  MS-NoOverrideVoid:
+  	msigs(CT, X*, t, meth*) = msig*
+  	---
+  	msigs(CT, X*, t, public void m(p*) mbody meth*) = msig*
+
   // Type normalization
   // Parameters
   NPP-Empty:
@@ -458,9 +506,8 @@ TLP-ClassGenSup:
     normPrimParams(CT, X*, ) = []
 
   NPP-NonEmpty:
-    normPrim(CT, X*, T) = t
-    normPrimParamsTail(CT, X*, p') = t*
-    ----------------------------------------
+    (normPrim(CT, X*, T) = t) (normPrimParamsTail(CT, X*, p') = t*)
+    ---------------------------------------------------------------
     normPrimParams(CT, X*, T x p') = t :: t*
 
   // Class table handling
