@@ -221,6 +221,8 @@ lexical syntax
   "p" ALPHANUMS "*"    -> MVParameters
   "p" ALPHANUMS "'"    -> MVParametersTail
   "sc" ALPHANUMS       -> MVSuperClass
+  "stm" ALPHANUMS      -> MVStatement
+  MVStatement "*"      -> MVStatements
   "tld" ALPHANUMS "*"  -> MVToplevelDecs
 
 lexical restrictions
@@ -259,6 +261,8 @@ variables
   MVParameters      -> Parameters      {prefer}
   MVParametersTail  -> ParametersTail  {prefer}
   MVSuperClass      -> SuperClass      {prefer}
+  MVStatement       -> Statement       {prefer}
+  MVStatements      -> Statement       {prefer}
   MVToplevelDecs    -> ToplevelDecs    {prefer}
 
 // Syntax internal to the type system
@@ -299,17 +303,13 @@ context-free syntax
   Imports                                -> ClassTable
   Imports "," ID "|->" QID ":" ClassType -> ClassTable
 
-  // Field context
-  "[]" -> FieldContext
-  ID ":" AType "::" FieldContext -> FieldContext
-
-  // Variable context
-  "[]"                         -> VarContext
-  ID ":" AType "::" VarContext -> VarContext
-
   // Method lookup result
   "undef"  -> MlookupRes
   MethType -> MlookupRes
+
+  // Environment
+  "(/)"                -> Env
+  Env "," ID ":" AType -> Env
 
   // Module interface
   ClassType -> ModuleInterface
@@ -331,10 +331,9 @@ lexical syntax
   "ct" ALPHANUMS      -> MVClassType
   "I" ALPHANUMS "*"   -> MVImports
   "CT" ALPHANUMS      -> MVClassTable
-  "Cf" ALPHANUMS      -> MVFieldContext
-  "Cv" ALPHANUMS      -> MVVarContext
   "M" ALPHANUMS       -> MVModuleInterface
   "mlres" ALPHANUMS   -> MVMlookupRes
+  "E" ALPHANUMS        -> MVEnv
 
 lexical restrictions
   MVAType
@@ -344,10 +343,9 @@ lexical restrictions
   MVClassType
   MVType
   MVClassTable
-  MVFieldContext
-  MVVarContext
   MVModuleInterface
   MVMlookupRes
+  MVEnv
     -/- [a-zA-Z0-9]
 
 variables
@@ -362,10 +360,9 @@ variables
   MVClassType       -> ClassType       {prefer}
   MVImports         -> Imports         {prefer}
   MVClassTable      -> ClassTable      {prefer}
-  MVFieldContext    -> FieldContext    {prefer}
-  MVVarContext      -> VarContext      {prefer}
   MVModuleInterface -> ModuleInterface {prefer}
   MVMlookupRes      -> MlookupRes      {prefer}
+  MVEnv             -> Env             {prefer}
 
 // Module system declarations
 interface ModuleInterface
@@ -397,12 +394,18 @@ judgement forms
   { "normListPrim" "(" ClassTable "," TypeVars "," Types1 ")" "=" ATypes } // TODO req?
   { "norm" "(" ClassTable "," TypeVars "," Type ")" "=" AType }
   { "normList" "(" ClassTable "," TypeVars "," Types1 ")" "=" ATypes }
-  { ClassTable "|-" ClassBody "OK" } // TODO
   { "mt" "[" TypeVars "|->" ATypes "]" "(" MethType ")" "=" MethType }
   { "[" TypeVars "|->" ATypes "]" "(" AType ")" "=" AType }
   { "[" TypeVars "|->" ATypes "]" "(" ATypes ")" "=" ATypes }
   { "replace" "(" TypeVars "," ATypes "," ID ")" "=" AType }
-  
+  { ClassTable "|-" ClassBody "OK" } // TODO
+  { "fieldenv" "(" ClassTable "," Fields ")" "=" Env }
+  { ClassTable ";" Env "|-" Methods "OK" }
+  { "typevars" "(" ClassTable ")" "=" TypeVars }
+  { ID "notin" "dom" "(" Env ")" }
+  { "localenv" "(" ClassTable "," Parameters ")" "=" Env }
+  { "localenvTail" "(" ClassTable "," ParametersTail ")" "=" Env }
+  { ClassTable ";" Env ";" Env "|-" Statements "~" RetType } // TODO
 
 inductive definitions
   // Toplevel declarations (TL: toplevel)
@@ -729,6 +732,11 @@ inductive definitions
     -------------------------------
     qualify(I*, c0|->q0:ct, c) = q
 
+  // Get type variables from current class (CTV: class table variables)
+  CTV-TypeVars:
+    -----------------------------------------------
+    typevars(I*, c |-> q : {t*, msig*, t, X*}) = X*
+
   // Type variables
   TVD-Last:
     ---------------------
@@ -819,6 +827,86 @@ inductive definitions
     ([X* |-> t*](s*) = s1*) ([X* |-> t*](s) = s1)
     ---------------------------------------------
     mt[X* |-> t*](s* -> s) = s1* -> s1
+
+  // Class body
+  CB-Implicit:
+    fieldenv(CT, fld*) = Ef
+    CT; Ef |- meth* OK
+    -----------------------
+    CT |- { fld* meth* } OK
+
+  // Check methods (M: methods)
+  M-Empty:
+    ------------
+    CT; Ef |- OK
+
+  M-Void:
+    localenv(CT, p*) = El
+    CT; Ef; El |- stm* ~ void
+    CT; Ef |- meth* OK
+    ---------------------------------------------
+    CT; Ef |- public void m(p*) { stm* } meth* OK
+
+  M-Type:
+    localenv(CT, p*) = El
+    typevars(CT) = X*
+    norm(CT, X*, T) = t
+    CT; Ef; El |- stm* ~ t
+    CT; Ef |- meth* OK
+    ------------------------------------------
+    CT; Ef |- public T m(p*) { stm* } meth* OK
+
+  // Field environments
+  // Build field environment (FE: field environment)
+  FE-Empty:
+    --------------------
+    fieldenv(CT, ) = (/)
+
+  FE-NotEmpty:
+    fieldenv(CT, fld*) = Ef
+    x notin dom(Ef)
+    typevars(CT) = X*
+    normPrim(CT, X*, T) = t
+    ----------------------------------------
+    fieldenv(CT, private T x; fld*) = Ef,x:t
+
+  // Check that variable is not bound (ED: environmemnt domain)
+  ED-Empty:
+    ----------------
+    x notin dom((/))
+
+  ED-Next:
+    (x =/= y) (x notin dom(E))
+    --------------------------
+    x notin dom(E,y:t)
+
+  // Loval environments
+  // Build local environment (LE: local environment)
+  LE-Empty:
+    --------------------
+    localenv(CT, ) = (/)
+
+  LE-NotEmpty:
+    localenvTail(CT, p') = El
+    x notin dom(El)
+    typevars(CT) = X*
+    normPrim(CT, X*, T) = t
+    -----------------------------
+    localenv(CT, T x p') = El,x:t
+
+  // Local environment from parameters tail (LET: local environment tail)
+  LET-Empty:
+    ------------------------
+    localenvTail(CT, ) = (/)
+
+  LET-NotEmpty:
+    localenvTail(CT, p') = El
+    x notin dom(El)
+    typevars(CT) = X*
+    normPrim(CT, X*, T) = t
+    -----------------------------------
+    localenvTail(CT, , T x p') = El,x:t
+
 
 // Extension declarations
 context-free syntax
