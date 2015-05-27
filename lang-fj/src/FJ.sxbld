@@ -1,4 +1,4 @@
-base language definition FJ
+base language definition FJ 
 
 lexical syntax
   [\ \t\r\n] -> LAYOUT
@@ -209,6 +209,7 @@ lexical syntax
   "X" ALPHANUMS "+"    -> MVTypeVars1
   "c" ALPHANUMS        -> MVClassName
   "k" ALPHANUMS        -> MVConstructorName
+  "m" ALPHANUMS        -> MVMethodName
   "pkg" ALPHANUMS      -> MVPID
   "q" ALPHANUMS        -> MVQID
   "cbody" ALPHANUMS    -> MVClassBody
@@ -228,6 +229,7 @@ lexical restrictions
   MVTypeVar
   MVClassName
   MVConstructorName
+  MVMethodName
   MVPID
   MVQID
   MVClassBody
@@ -245,6 +247,7 @@ variables
   MVTypeVars1       -> TypeVars1       {prefer}
   MVClassName       -> ID              {prefer}
   MVConstructorName -> ID              {prefer}
+  MVMethodName      -> ID              {prefer}
   MVPID             -> PID             {prefer}
   MVQID             -> QID             {prefer}
   MVClassBody       -> ClassBody       {prefer}
@@ -305,8 +308,8 @@ context-free syntax
   ID ":" AType "::" VarContext -> VarContext
 
   // Method lookup result
-  "undef" -> MlookupRes
-  MethSig -> MlookupRes
+  "undef"  -> MlookupRes
+  MethType -> MlookupRes
 
   // Module interface
   ClassType -> ModuleInterface
@@ -331,6 +334,7 @@ lexical syntax
   "Cf" ALPHANUMS      -> MVFieldContext
   "Cv" ALPHANUMS      -> MVVarContext
   "M" ALPHANUMS       -> MVModuleInterface
+  "mlres" ALPHANUMS   -> MVMlookupRes
 
 lexical restrictions
   MVAType
@@ -343,6 +347,7 @@ lexical restrictions
   MVFieldContext
   MVVarContext
   MVModuleInterface
+  MVMlookupRes
     -/- [a-zA-Z0-9]
 
 variables
@@ -360,6 +365,7 @@ variables
   MVFieldContext    -> FieldContext    {prefer}
   MVVarContext      -> VarContext      {prefer}
   MVModuleInterface -> ModuleInterface {prefer}
+  MVMlookupRes      -> MlookupRes      {prefer}
 
 // Module system declarations
 interface ModuleInterface
@@ -377,28 +383,35 @@ judgement forms
   { ID "notin" TypeVars }
   { "|" TypeVars "|" "=" "|" ATypes "|" }
   { ClassTable "(" ID ")" "=" ClassType }
+  { ClassTable "." QID  "=" ClassType }
   { "qualify" "(" ClassTable "," ID ")" "=" QID }
-  { "msigs" "(" ClassTable "," TypeVars "," AType "," ClassBody ")" "=" MethSigs } // TODO
-  { "msigs" "(" ClassTable "," TypeVars "," AType "," Methods ")" "=" MethSigs } // TODO
-  { ID "undef" "in" MethSigs } // TODO
-  { "mlookup" "(" ClassTable "," AType "," ID ")" "=" MlookupResult } // TODO
+  { "msigs" "(" ClassTable "," TypeVars "," AType "," ClassBody ")" "=" MethSigs }
+  { "msigs" "(" ClassTable "," TypeVars "," AType "," Methods ")" "=" MethSigs }
+  { "mtype" "(" ID "," MethSigs ")" "=" MlookupRes }
+  { "mlookup" "(" ClassTable "," AType "," ID ")" "=" MlookupRes }
   { "conparams" "(" ClassTable "," ID "," TypeVars "," ClassBody ")" "=" ATypes }
   { "normSuperClass" "(" ClassTable "," TypeVars "," SuperClass ")" "=" AType }
   { "normPrimParams" "(" ClassTable "," TypeVars "," Parameters ")" "=" ATypes }
   { "normPrimParamsTail" "(" ClassTable "," TypeVars "," ParametersTail ")" "=" ATypes }
   { "normPrim" "(" ClassTable "," TypeVars "," Type ")" "=" AType }
-  { "normListPrim" "(" ClassTable "," TypeVars "," Types1 ")" "=" ATypes } // TODO
+  { "normListPrim" "(" ClassTable "," TypeVars "," Types1 ")" "=" ATypes } // TODO req?
   { "norm" "(" ClassTable "," TypeVars "," Type ")" "=" AType }
   { "normList" "(" ClassTable "," TypeVars "," Types1 ")" "=" ATypes }
   { ClassTable "|-" ClassBody "OK" } // TODO
+  { "mt" "[" TypeVars "|->" ATypes "]" "(" MethType ")" "=" MethType }
+  { "[" TypeVars "|->" ATypes "]" "(" AType ")" "=" AType }
+  { "[" TypeVars "|->" ATypes "]" "(" ATypes ")" "=" ATypes }
+  { "replace" "(" TypeVars "," ATypes "," ID ")" "=" AType }
+  
 
 inductive definitions
-  // Toplevel declarations
+  // Toplevel declarations (TL: toplevel)
   TL-Package:
     CT | pkg |- tld* => M
     ----------------------------
     CT |- package pkg; tld* => M
-  
+
+  // Toplevel declarations with package name (TLP: toplevel package)
   TLP-Import:
     suffix(q) = c
     CT + c |-> q = CT1
@@ -438,7 +451,7 @@ inductive definitions
     ---------------------------------------------------------------
     CT | pkg |- public class c<X+> cbody => {t*, msig*, Object, X*}
 
-TLP-ClassGenSup:
+  TLP-ClassGenSup:
     c notin dom(CT)
     disjoint(X+) = X*
     normSuperClass(CT, X*, sc) = t
@@ -454,7 +467,7 @@ TLP-ClassGenSup:
     -----------------
     CT | pkg |- => {}
 
-  // Constructor parameters
+  // Constructor parameters (CP: constructor parameters)
   CP-Implicit:
      -----------------------------------------
      conparams(CT, c, X*, { fld* meth* }) = []
@@ -464,7 +477,7 @@ TLP-ClassGenSup:
      --------------------------------------------------------------
      conparams(CT, c, X*, { fld* public c(p*) conbody meth* }) = t*
 
-  // Method signatures
+  // Method signatures (MS: method signatures)
   MS-ConImplicit:
   	msigs(CT, X*, t, meth*) = msig*
   	----------------------------------------
@@ -481,26 +494,74 @@ TLP-ClassGenSup:
 
   MS-Override:
   	msigs(CT, X*, t, meth*) = msig*
-  	---
-  	msigs(CT, X*, t, public T m(p*) mbody meth*) = msig*
+  	mtype(m, msig*) = undef
+	normPrim(CT, X*, T) = s
+	normPrimParams(CT, X*, p*) = s*
+  	mlookup(CT, t, m) = s*->s
+  	---------------------------------------------------------------
+  	msigs(CT, X*, t, public T m(p*) mbody meth*) = m:s*->s :: msig*
 
   MS-NoOverride:
   	msigs(CT, X*, t, meth*) = msig*
-  	---
-  	msigs(CT, X*, t, public T m(p*) mbody meth*) = msig*
+  	mtype(m, msig*) = undef
+	normPrim(CT, X*, T) = s
+	normPrimParams(CT, X*, p*) = s*
+  	mlookup(CT, t, m) = undef
+  	---------------------------------------------------------------
+  	msigs(CT, X*, t, public T m(p*) mbody meth*) = m:s*->s :: msig*
 
   MS-OverrideVoid:
   	msigs(CT, X*, t, meth*) = msig*
-  	---
-  	msigs(CT, X*, t, public void m(p*) mbody meth*) = msig*
+  	mtype(m, msig*) = undef
+	normPrimParams(CT, X*, p*) = s*
+  	mlookup(CT, t, m) = s*->void
+  	---------------------------------------------------------------------
+  	msigs(CT, X*, t, public void m(p*) mbody meth*) = m:s*->void :: msig*
 
   MS-NoOverrideVoid:
   	msigs(CT, X*, t, meth*) = msig*
-  	---
-  	msigs(CT, X*, t, public void m(p*) mbody meth*) = msig*
+  	mtype(m, msig*) = undef
+	normPrimParams(CT, X*, p*) = s*
+  	mlookup(CT, t, m) = undef
+  	---------------------------------------------------------------------
+  	msigs(CT, X*, t, public void m(p*) mbody meth*) = m:s*->void :: msig*
 
-  // Type normalization
-  // Parameters
+  // Method type lookup in method signatures (MT: method type)
+  MT-Empty:
+  	--------------------
+  	mtype(m, []) = undef
+
+  MT-Next:
+  	(m0 =/= m) (mtype(m, msig*) = mlres)
+  	------------------------------------
+  	mtype(m, m0:mt :: msig*) = mlres
+
+  MT-Found:
+  	----------------------------
+  	mtype(m, m:mt :: msig*) = mt
+
+  // Method lookup in class table (ML: method lookup)
+  ML-Object:
+  	-------------------------------
+  	mlookup(CT, Object, m) = undef
+
+  ML-Found:
+  	CT.q = {s*, msig*, s, X*}
+  	mtype(m, msig*) = mt
+  	mt[X* |-> t*](mt) = mt1
+  	--------------------------
+  	mlookup(CT, q t*, m) = mt1
+
+  ML-Next:
+    CT.q = {s*, msig*, s, X*}
+    mtype(m, msig*) = undef
+    [X* |-> t*](s) = s1
+    mlookup(CT, s1, m) = mlres
+    ----------------------------
+    mlookup(CT, q t*, m) = mlres
+
+  // Type normalisation
+  // Parameters (NPP: normalise primitives parameters)
   NPP-Empty:
     -----------------------------
     normPrimParams(CT, X*, ) = []
@@ -510,7 +571,77 @@ TLP-ClassGenSup:
     ---------------------------------------------------------------
     normPrimParams(CT, X*, T x p') = t :: t*
 
+  NPP-EmptyTail:
+    ---------------------------------
+    normPrimParamsTail(CT, X*, ) = []
+
+  NPP-NonEmptyTail:
+    (normPrim(CT, X*, T) = t) (normPrimParamsTail(CT, X*, p') = t*)
+    ---------------------------------------------------------------
+    normPrimParamsTail(CT, X*, , T x p') = t :: t*
+
+  // Superclasses (NSC: normalise super class)
+  NSC-Mon:
+    norm(CT, X*, c) = t
+    -----------------------------
+    normSuperClass(CT, X*, c) = t
+
+  NSC-Gen:
+    norm(CT, X*, c<T+>) = t
+    ---------------------------------
+    normSuperClass(CT, X*, c<T+>) = t
+
+  // Classes and type variables (NC: normalise class)
+  NC-TypeVar:
+    X in X*
+    -------------------
+    norm(CT, X*, X) = X
+
+  NC-MonClass:
+    (c notin X*) (qualify(CT, c) = q)
+    ---------------------------------
+    norm(CT, X*, c) = q
+
+  NC-GenClass:
+    qualify(CT, c) = q
+    CT(c) = {s*, msig*, s, Y*}
+    normList(CT, X*, T+) = t*
+    |Y*| = |t*|
+    --------------------------
+    norm(CT, X*, c<T+>) = q t*
+
+ // List of classes and type variables (NLC: norm list class)
+  NLC-Last:
+    norm(CT, X*, T) = t
+    -----------------------------
+    normList(CT, X*, T) = t :: []
+
+  NLC-Cons:
+    (norm(CT, X*, T) = t) (normList(CT, X*, T+) = t*)
+    -------------------------------------------------
+    normList(CT, X*, T,T+) = t :: t*
+
+  // Types (NT: normalise types)
+  NT-Int:
+    ---------------------------
+    normPrim(CT, X*, int) = int
+
+  NT-Boolean:
+    -----------------------------------
+    normPrim(CT, X*, boolean) = boolean
+
+  NT-Identifier:
+    norm(CT, X*, X) = t
+    -----------------------
+    normPrim(CT, X*, X) = t
+
+  NT-GenClass:
+    norm(CT, X*, c<T+>) = t
+    ---------------------------
+    normPrim(CT, X*, c<T+>) = t
+
   // Class table handling
+  // Add import to class table (CTI: class table import)
   CTI-Imports:
     ----------------------------
     I* + c |-> q = c |-> q :: I*
@@ -519,10 +650,12 @@ TLP-ClassGenSup:
     ------------------------------------------------------------
     I*, c0 |-> q0 : ct + c |-> q = c |-> q :: I*, c0 |-> q0 : ct
 
+  // Add current class to class table (CTC: class table class)
   CTC-Imports:
     ------------------------------------
     I* + c |-> q : ct = I*, c |-> q : ct
 
+  // Check that class name is not in class table (CTD: class table domain)
   CTD-Empty:
     ---------------
     c notin dom([])
@@ -537,6 +670,7 @@ TLP-ClassGenSup:
     ----------------------------
     c notin dom(c0 |-> q0 :: I*)
 
+  // Unqualified lookup (CTL: class table lookup)
   CTL-ImportFound:
     ct = interface(q)
     -------------------
@@ -556,6 +690,27 @@ TLP-ClassGenSup:
     -----------------------
     I*,c0|->q0:ct(c) = ct
 
+  // Qualified lookup (CTLQ: class table lookup qualified)
+  CTLQ-ImportFound:
+    ct = interface(q)
+    --------------------
+    c|->q :: I* . q = ct
+
+  CTLQ-ImportNext:
+    (q0 =/= q) (I*.q = ct)
+    ----------------------
+    c0|->q0 :: I* . q = ct
+
+  CTLQ-ClassFound:
+    --------------------
+    I*,c|->q:ct . q = ct
+
+  CTLQ-ClassNext:
+    (q0 =/= q) (I*.q = ct)
+    ----------------------
+    I*,c0|->q0:ct . q = ct
+
+  // Qualify class name (CTQ: class table qualify)
   CTQ-ImportFound:
     ---------------------------
     qualify(c|->q :: I*, c) = q
@@ -610,7 +765,61 @@ TLP-ClassGenSup:
   	|X*| = |t*|
   	-----------------
   	|X::X*| = |t::t*|
- 
+
+  // Substitution
+  // Abstract types (ST: substitution type)
+  ST-Int:
+    ----------------------
+    [X* |-> t*](int) = int
+
+  ST-Boolean:
+    ------------------------------
+    [X* |-> t*](boolean) = boolean
+
+  ST-Object:
+    ----------------------------
+    [X* |-> t*](Object) = Object
+
+  ST-Class:
+    [X* |-> t*](s*) = s1*
+    -------------------------
+    [X* |-> t*](q s*) = q s1*
+
+  ST-Var:
+    replace(X*, t*, X) = s
+    -----------------------
+    [X* |-> t*](X) = s
+
+  // List of abstract types (SLT: substitution list types)
+  ST-Empty:
+    --------------------
+    [X* |-> t*]([]) = []
+
+  ST-NonEmpty:
+    ([X* |-> t*](s) = s1) ([X* |-> t*](s*) = s1*)
+    ---------------------------------------------
+    [X* |-> t*](s :: s*) = s1 :: s1*
+
+  // Replace a variable (SV: substitution variable)
+  SV-Found:
+    ------------------------
+    [X::X* |-> t::t*](X) = t
+
+  SV-Empty:
+    ------------------
+    [[] |-> []](X) = X
+
+  SV-Next:
+    (X =/= Y) ([X* |-> t*](Y) = s)
+    ------------------------------
+    [X::X* |-> t::t*](Y) = s
+
+  // Method types (SM: substitution method)
+  SM-MethType:
+    ([X* |-> t*](s*) = s1*) ([X* |-> t*](s) = s1)
+    ---------------------------------------------
+    mt[X* |-> t*](s* -> s) = s1* -> s1
+
 // Extension declarations
 context-free syntax
   "public" "extension" c:ID "{" -> ExtensionBegin {sx-namespace-suffix(c)}
