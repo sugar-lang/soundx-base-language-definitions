@@ -33,6 +33,7 @@ lexical syntax
   "null"      -> Keyword
   "new"       -> Keyword
   "extension" -> Keyword
+  "this"      -> Keyword
   Keyword     -> ID {reject}
 
 // Types
@@ -207,6 +208,7 @@ lexical syntax
   "Y" ALPHANUMS        -> MVTypeVar
   "T" ALPHANUMS "+"    -> MVTypes1
   "X" ALPHANUMS "+"    -> MVTypeVars1
+  "n" ALPHANUMS        -> MVINT
   "c" ALPHANUMS        -> MVClassName
   "k" ALPHANUMS        -> MVConstructorName
   "m" ALPHANUMS        -> MVMethodName
@@ -231,6 +233,7 @@ lexical restrictions
   MVVar
   MVType
   MVTypeVar
+  MVINT
   MVClassName
   MVConstructorName
   MVMethodName
@@ -251,6 +254,7 @@ variables
   MVTypeVar         -> ID              {prefer}
   MVTypes1          -> Types1          {prefer}
   MVTypeVars1       -> TypeVars1       {prefer}
+  MVINT             -> INT             {prefer}
   MVClassName       -> ID              {prefer}
   MVConstructorName -> ID              {prefer}
   MVMethodName      -> ID              {prefer}
@@ -412,7 +416,7 @@ judgement forms
   { ID "notin" "dom" "(" Env ")" }
   { "localenv" "(" ClassTable "," Parameters ")" "=" Env }
   { "localenvTail" "(" ClassTable "," ParametersTail ")" "=" Env }
-  { ClassTable ";" Env ";" Env "|-" Statements "~" RetType } // TODO
+  { ClassTable ";" Env ";" Env "|-" Statements "~" RetType }
   { ClassTable ";" Env ";" Env "|-" Expr ":" AType } // TODO
   { ClassTable ";" Env ";" Env "|-" Exprs ":" ATypes } // TODO
   { ClassTable "|-" AType "<:" AType } // TODO
@@ -966,6 +970,54 @@ inductive definitions
     CT; Ef; El |- stm ~ rt
     ---------------------------------
     CT; Ef; El |- { stm1* } stm* ~ rt
+
+  // Expressions
+  E-Int:
+    ---------------------
+    CT; Ef; El |- n : int
+
+  E-True:
+    ----------------------------
+    CT; Ef; El |- true : boolean
+
+  E-False:
+    -----------------------------
+    CT; Ef; El |- false : boolean
+
+  E-Null:
+    -------------------------
+    CT; Ef; El |- null : q t*
+
+  E-Var:
+    x:t in Ef;El
+    -------------------
+    CT; Ef; El |- x : t
+
+  E-Field:
+    x:t in Ef
+    ------------------------
+    CT; Ef; El |- this.x : t
+
+  E-This:
+    class(CT) = t
+    ----------------------
+    CT; Ef; El |- this : t
+
+  E-Call:
+    class(CT) = s
+    mlookup(CT, s, m) = t* -> t
+    CT; Ef; El |- e* : s*
+    CT |- s* <: t*
+    ---------------------------
+    CT; Ef; El |- m(e*) : t
+
+  E-CallObj:
+    CT; Ef; El |- e : s
+    mlookup(CT, s, m) = t* -> t
+    CT; Ef; El |- e* : s*
+    CT |- s* <: t*
+    ---------------------------
+    CT; Ef; El |- e.m(e*) : t
 
   // Environments
   // Check that variable is not bound (ED: environmemnt domain)
