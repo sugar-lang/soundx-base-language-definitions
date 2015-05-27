@@ -479,78 +479,78 @@ inductive definitions
 
   // Method signatures (MS: method signatures)
   MS-ConImplicit:
-  	msigs(CT, X*, t, meth*) = msig*
-  	----------------------------------------
-  	msigs(CT, X*, t, { fld* meth* }) = msig*
+    msigs(CT, X*, t, meth*) = msig*
+    ----------------------------------------
+    msigs(CT, X*, t, { fld* meth* }) = msig*
 
   MS-ConExplicit:
-  	msigs(CT, X*, t, meth*) = msig*
-  	--------------------------------------------
-  	msigs(CT, X*, t, { fld* con meth* }) = msig*
+    msigs(CT, X*, t, meth*) = msig*
+    --------------------------------------------
+    msigs(CT, X*, t, { fld* con meth* }) = msig*
 
   MS-Empty:
-  	-----------------------
-  	msigs(CT, X*, t, ) = []
+    -----------------------
+    msigs(CT, X*, t, ) = []
 
   MS-Override:
-  	msigs(CT, X*, t, meth*) = msig*
-  	mtype(m, msig*) = undef
-	normPrim(CT, X*, T) = s
-	normPrimParams(CT, X*, p*) = s*
-  	mlookup(CT, t, m) = s*->s
-  	---------------------------------------------------------------
-  	msigs(CT, X*, t, public T m(p*) mbody meth*) = m:s*->s :: msig*
+    msigs(CT, X*, t, meth*) = msig*
+    mtype(m, msig*) = undef
+    normPrim(CT, X*, T) = s
+    normPrimParams(CT, X*, p*) = s*
+    mlookup(CT, t, m) = s*->s
+    ---------------------------------------------------------------
+    msigs(CT, X*, t, public T m(p*) mbody meth*) = m:s*->s :: msig*
 
   MS-NoOverride:
-  	msigs(CT, X*, t, meth*) = msig*
-  	mtype(m, msig*) = undef
-	normPrim(CT, X*, T) = s
-	normPrimParams(CT, X*, p*) = s*
-  	mlookup(CT, t, m) = undef
-  	---------------------------------------------------------------
-  	msigs(CT, X*, t, public T m(p*) mbody meth*) = m:s*->s :: msig*
+    msigs(CT, X*, t, meth*) = msig*
+    mtype(m, msig*) = undef
+    normPrim(CT, X*, T) = s
+    normPrimParams(CT, X*, p*) = s*
+    mlookup(CT, t, m) = undef
+    ---------------------------------------------------------------
+    msigs(CT, X*, t, public T m(p*) mbody meth*) = m:s*->s :: msig*
 
   MS-OverrideVoid:
-  	msigs(CT, X*, t, meth*) = msig*
-  	mtype(m, msig*) = undef
-	normPrimParams(CT, X*, p*) = s*
-  	mlookup(CT, t, m) = s*->void
-  	---------------------------------------------------------------------
-  	msigs(CT, X*, t, public void m(p*) mbody meth*) = m:s*->void :: msig*
+    msigs(CT, X*, t, meth*) = msig*
+    mtype(m, msig*) = undef
+    normPrimParams(CT, X*, p*) = s*
+    mlookup(CT, t, m) = s*->void
+    ---------------------------------------------------------------------
+    msigs(CT, X*, t, public void m(p*) mbody meth*) = m:s*->void :: msig*
 
   MS-NoOverrideVoid:
-  	msigs(CT, X*, t, meth*) = msig*
-  	mtype(m, msig*) = undef
-	normPrimParams(CT, X*, p*) = s*
-  	mlookup(CT, t, m) = undef
-  	---------------------------------------------------------------------
-  	msigs(CT, X*, t, public void m(p*) mbody meth*) = m:s*->void :: msig*
+    msigs(CT, X*, t, meth*) = msig*
+    mtype(m, msig*) = undef
+    normPrimParams(CT, X*, p*) = s*
+    mlookup(CT, t, m) = undef
+    ---------------------------------------------------------------------
+    msigs(CT, X*, t, public void m(p*) mbody meth*) = m:s*->void :: msig*
 
   // Method type lookup in method signatures (MT: method type)
   MT-Empty:
-  	--------------------
-  	mtype(m, []) = undef
+    --------------------
+    mtype(m, []) = undef
 
   MT-Next:
-  	(m0 =/= m) (mtype(m, msig*) = mlres)
-  	------------------------------------
-  	mtype(m, m0:mt :: msig*) = mlres
+    (m0 =/= m) (mtype(m, msig*) = mlres)
+    ------------------------------------
+    mtype(m, m0:mt :: msig*) = mlres
 
   MT-Found:
-  	----------------------------
-  	mtype(m, m:mt :: msig*) = mt
+    ----------------------------
+    mtype(m, m:mt :: msig*) = mt
 
   // Method lookup in class table (ML: method lookup)
   ML-Object:
-  	-------------------------------
-  	mlookup(CT, Object, m) = undef
+    -------------------------------
+    mlookup(CT, Object, m) = undef
 
   ML-Found:
-  	CT.q = {s*, msig*, s, X*}
-  	mtype(m, msig*) = mt
-  	mt[X* |-> t*](mt) = mt1
-  	--------------------------
-  	mlookup(CT, q t*, m) = mt1
+    CT.q = {s*, msig*, s, X*}
+    mtype(m, msig*) = mt
+    mt[X* |-> t*](mt) = mt1
+    --------------------------
+    mlookup(CT, q t*, m) = mt1
 
   ML-Next:
     CT.q = {s*, msig*, s, X*}
@@ -758,13 +758,13 @@ inductive definitions
     X notin Y :: X*
 
   TVL-Empty:
-  	-----------
-  	|[]| = |[]|
+    -----------
+    |[]| = |[]|
 
   TVL-NotEmpty:
-  	|X*| = |t*|
-  	-----------------
-  	|X::X*| = |t::t*|
+    |X*| = |t*|
+    -----------------
+    |X::X*| = |t::t*|
 
   // Substitution
   // Abstract types (ST: substitution type)
