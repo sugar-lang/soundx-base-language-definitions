@@ -946,6 +946,27 @@ inductive definitions
     ------------------------------------
     CT; Ef; El |- while(e) stm stm* ~ rt
 
+  S-If:
+    CT; Ef; El |- e : boolean
+    CT; Ef; El |- stm ~ void
+    CT; Ef; El |- stm* ~ rt
+    ---------------------------------
+    CT; Ef; El |- if(e) stm stm* ~ rtn
+
+  S-IfElse:
+    CT; Ef; El |- e : boolean
+    CT; Ef; El |- stm1 ~ void
+    CT; Ef; El |- stm2 ~ void
+    CT; Ef; El |- stm* ~ rt
+    --------------------------------------------
+    CT; Ef; El |- if(e) stm1 else stm2 stm* ~ rt
+
+  S-Block:
+    CT; Ef; El |- stm1* ~ void
+    CT; Ef; El |- stm ~ rt
+    ---------------------------------
+    CT; Ef; El |- { stm1* } stm* ~ rt
+
   // Environments
   // Check that variable is not bound (ED: environmemnt domain)
   ED-Empty:
