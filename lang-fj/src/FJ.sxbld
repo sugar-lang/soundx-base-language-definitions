@@ -223,6 +223,8 @@ lexical syntax
   "sc" ALPHANUMS       -> MVSuperClass
   "stm" ALPHANUMS      -> MVStatement
   MVStatement "*"      -> MVStatements
+  "e" ALPHANUMS        -> MVExpr
+  MVExpr "*"           -> MVExprs
   "tld" ALPHANUMS "*"  -> MVToplevelDecs
 
 lexical restrictions
@@ -239,6 +241,8 @@ lexical restrictions
   MVConstructorBody
   MVMethodBody
   MVSuperClass
+  MVStatement
+  MVExpr
     -/- [a-zA-Z0-9]
 
 variables
@@ -263,6 +267,8 @@ variables
   MVSuperClass      -> SuperClass      {prefer}
   MVStatement       -> Statement       {prefer}
   MVStatements      -> Statement       {prefer}
+  MVExpr            -> Expr            {prefer}
+  MVExprs           -> Exprs           {prefer}
   MVToplevelDecs    -> ToplevelDecs    {prefer}
 
 // Syntax internal to the type system
@@ -402,10 +408,19 @@ judgement forms
   { "fieldenv" "(" ClassTable "," Fields ")" "=" Env }
   { ClassTable ";" Env "|-" Methods "OK" }
   { "typevars" "(" ClassTable ")" "=" TypeVars }
+  { "class" "(" ClassTable ")" "=" AType }
   { ID "notin" "dom" "(" Env ")" }
   { "localenv" "(" ClassTable "," Parameters ")" "=" Env }
   { "localenvTail" "(" ClassTable "," ParametersTail ")" "=" Env }
   { ClassTable ";" Env ";" Env "|-" Statements "~" RetType } // TODO
+  { ClassTable ";" Env ";" Env "|-" Expr ":" AType } // TODO
+  { ClassTable ";" Env ";" Env "|-" Exprs ":" ATypes } // TODO
+  { ClassTable "|-" AType "<:" AType } // TODO
+  { ClassTable "|-" ATypes "<:" ATypes } // TODO
+  { ID ":" AType "in" Env ";" Env } // TODO
+  { ID ":" AType "in" Env } // TODO
+  { "typevarsAsTypes" "(" TypeVars ")" "=" ATypes } // TODO
+  
 
 inductive definitions
   // Toplevel declarations (TL: toplevel)
@@ -737,6 +752,12 @@ inductive definitions
     -----------------------------------------------
     typevars(I*, c |-> q : {t*, msig*, t, X*}) = X*
 
+  // Get the abstract type of the current class (CTC: class table class)
+  CTC-Class:
+    typevarsAsTypes(X*) = s*
+    ---------------------------------------------
+    class(I*, c |-> q : {t*, msig*, t, X*}) = q s*
+
   // Type variables
   TVD-Last:
     ---------------------
@@ -856,6 +877,86 @@ inductive definitions
     ------------------------------------------
     CT; Ef |- public T m(p*) { stm* } meth* OK
 
+  // Statements
+  S-Empty:
+    --------------------
+    CT; Ef; El |- ~ void
+
+  S-Return:
+    CT; Ef; El |- e : t
+    ---------------------------
+    CT; Ef; El |- return e; ~ t
+
+  S-VarDecl:
+    x notin dom(El)
+    typevars(CT) = X*
+    norm(CT, X*, T) = t
+    CT; Ef; El,x:t |- stm* ~ rt
+    ----------------------------
+    CT; Ef; El |- T x; stm* ~ rt
+
+  S-VarDeclAssign:
+    x notin dom(El)
+    typevars(CT) = X*
+    norm(CT, X*, T) = t
+    CT; Ef; El |- e : s
+    CT |- s <: t
+    CT; Ef; El,x:t |- stm* ~ rt
+    --------------------------------
+    CT; Ef; El |- T x = e; stm* ~ rt
+
+  S-Assign:
+    x:t in Ef;El
+    CT; Ef; El |- e : s
+    CT |- s <: t
+    CT; Ef; El,x:t |- stm* ~ rt
+    ------------------------------
+    CT; Ef; El |- x = e; stm* ~ rt
+
+  S-AssignThis:
+    x:t in Ef
+    CT; Ef; El |- e : s
+    CT |- s <: t
+    CT; Ef; El |- stm* ~ rt
+    -----------------------------------
+    CT; Ef; El |- this.x = e; stm* ~ rt
+
+  S-Call:
+    class(CT) = s
+    mlookup(CT, s, m) = t1* -> rt1
+    CT; Ef; El |- e* : s*
+    CT |- s* <: t1*
+    CT; Ef; El |- stm* ~ rt
+    ------------------------------
+    CT; Ef; El |- m(e*); stm* ~ rt
+
+  S-CallObj:
+    CT; Ef; El |- e : q t*
+    mlookup(CT, q t*, m) = t1* -> rt1
+    CT; Ef; El |- e* : s*
+    CT |- s* <: t1*
+    CT; Ef; El |- stm* ~ rt
+    ---------------------------------
+    CT; Ef; El |- e.m(e*); stm* ~ rt
+
+  S-While:
+    CT; Ef; El |- e : boolean
+    CT; Ef; El |- stm ~ void
+    CT; Ef; El |- stm* ~ rt
+    ------------------------------------
+    CT; Ef; El |- while(e) stm stm* ~ rt
+
+  // Environments
+  // Check that variable is not bound (ED: environmemnt domain)
+  ED-Empty:
+    ----------------
+    x notin dom((/))
+
+  ED-Next:
+    (x =/= y) (x notin dom(E))
+    --------------------------
+    x notin dom(E,y:t)
+
   // Field environments
   // Build field environment (FE: field environment)
   FE-Empty:
@@ -869,16 +970,6 @@ inductive definitions
     normPrim(CT, X*, T) = t
     ----------------------------------------
     fieldenv(CT, private T x; fld*) = Ef,x:t
-
-  // Check that variable is not bound (ED: environmemnt domain)
-  ED-Empty:
-    ----------------
-    x notin dom((/))
-
-  ED-Next:
-    (x =/= y) (x notin dom(E))
-    --------------------------
-    x notin dom(E,y:t)
 
   // Loval environments
   // Build local environment (LE: local environment)
