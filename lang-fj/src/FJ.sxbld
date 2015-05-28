@@ -146,25 +146,33 @@ context-free syntax
   MethodCall                            -> Expr
   "new" ID "(" Exprs ")"                -> Expr
   "new" ID "<" Types1 ">" "(" Exprs ")" -> Expr
-  Expr "+" Expr                         -> Expr {left}
-  Expr "-" Expr                         -> Expr {left}
-  Expr "*" Expr                         -> Expr {left}
-  Expr "/" Expr                         -> Expr {left}
-  Expr "&&" Expr                        -> Expr {left}
-  Expr "||" Expr                        -> Expr {left}
+  Expr ARITHOP Expr                     -> Expr {left}
+  Expr LOGOP Expr                       -> Expr {left}
   "!" Expr                              -> Expr
-  Expr "<" Expr                         -> Expr {non-assoc}
-  Expr "<=" Expr                        -> Expr {non-assoc}
-  Expr "==" Expr                        -> Expr {non-assoc}
-  Expr "!=" Expr                        -> Expr {non-assoc}
-  Expr ">=" Expr                        -> Expr {non-assoc}
-  Expr ">" Expr                         -> Expr {non-assoc}
+  Expr CMPOP Expr                       -> Expr {non-assoc}
+  Expr EQOP Expr                        -> Expr {non-assoc}
   "(" Expr ")"                          -> Expr {bracket}
 
                      -> Exprs
   Expr ExprsTail     -> Exprs
                      -> ExprsTail
   "," Expr ExprsTail -> ExprsTail
+
+  "+" -> ARITHOP
+  "-" -> ARITHOP
+  "*" -> ARITHOP
+  "/" -> ARITHOP
+
+  "&&" -> LOGOP
+  "||" -> LOGOP
+
+  "<"  -> CMPOP
+  "<=" -> CMPOP
+  ">=" -> CMPOP
+  ">"  -> CMPOP
+
+  "==" -> EQOP
+  "!=" -> EQOP
 
 context-free priorities
   { "!" Expr       -> Expr } >
@@ -228,6 +236,10 @@ lexical syntax
   "e" ALPHANUMS        -> MVExpr
   MVExpr "*"           -> MVExprs
   "tld" ALPHANUMS "*"  -> MVToplevelDecs
+  aop ALPHANUMS        -> MVARITHOP
+  lop ALPHANUMS        -> MVLOGOP
+  cop ALPHANUMS        -> MVCMPOP
+  eop ALPHANUMS        -> MVEQOP
 
 lexical restrictions
   MVVar
@@ -246,6 +258,10 @@ lexical restrictions
   MVSuperClass
   MVStatement
   MVExpr
+  MVARITHOP
+  MVLOGOP
+  MVCMPOP
+  MVEQOP
     -/- [a-zA-Z0-9]
 
 variables
@@ -274,7 +290,11 @@ variables
   MVExpr            -> Expr            {prefer}
   MVExprs           -> Exprs           {prefer}
   MVToplevelDecs    -> ToplevelDecs    {prefer}
-
+  MVARITHOP         -> ARITHOP         {prefer}
+  MVLOGOP           -> LOGOP           {prefer}
+  MVCMPOP           -> CMPOP           {prefer}
+  MVEQOP            -> EQOP            {prefer}
+  
 // Syntax internal to the type system
 context-free syntax
   // Class signature
@@ -1019,6 +1039,50 @@ inductive definitions
     ---------------------------
     CT; Ef; El |- e.m(e*) : t
 
+  E-NewMon:
+    qualify(CT, k) = q
+    CT.q = {s*, msig*, s, []}
+    CT; Ef; El |- e* : t*
+    CT |- t* <: s*
+    ------------------------------
+    CT; Ef; El |- new k(e*) : q []
+
+  E-NewGen:
+    qualify(CT, k) = q
+    CT.q = {s*, msig*, s, Y*}
+    CT; Ef; El |- e* : t*
+    typevars(CT) = X*
+    normList(CT, X*, T+) = t1*
+    [Y* |-> t1*](s*) = s1*
+    CT |- t* <: s1*
+    -----------------------------------
+    CT; Ef; El |- new k<T+>(e*) : q t1*
+
+  E-ArithOp:
+    (CT; Ef; El |- e1 : int) (CT; Ef; El |- e2 : int)
+    -------------------------------------------------
+    CT; Ef; El |- e1 aop e2 : int
+
+  E-LogOp:
+    (CT; Ef; El |- e1 : boolean) (CT; Ef; El |- e2 : boolean)
+    ---------------------------------------------------------
+    CT; Ef; El |- e1 lop e2 : boolean
+
+  E-CmpOp:
+    (CT; Ef; El |- e1 : int) (CT; Ef; El |- e2 : int)
+    -------------------------------------------------
+    CT; Ef; El |- e1 cop e2 : boolean
+
+  E-EqOp:
+    (CT; Ef; El |- e1 : t) (CT; Ef; El |- e2 : t)
+    -------------------------------------------------
+    CT; Ef; El |- e1 eop e2 : boolean
+
+  E-Neg:
+    CT; Ef; El |- e : boolean
+    ---------------------------
+    CT; Ef; El |- ! e : boolean
+  
   // Environments
   // Check that variable is not bound (ED: environmemnt domain)
   ED-Empty:
