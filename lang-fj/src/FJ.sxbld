@@ -300,9 +300,6 @@ variables
   
 // Syntax internal to the type system
 context-free syntax
-  // Class signature
-  "OK" -> Ok
-
   // Expression types
   PrimitiveType -> AType
   QID ATypes    -> AType
@@ -431,7 +428,7 @@ judgement forms
   { "[" TypeVars "|->" ATypes "]" "(" AType ")" "=" AType }
   { "[" TypeVars "|->" ATypes "]" "(" ATypes ")" "=" ATypes }
   { "replace" "(" TypeVars "," ATypes "," ID ")" "=" AType }
-  { ClassTable "|-" ClassBody "OK" } // TODO
+  { ClassTable "|-" ClassBody "OK" }
   { "fieldenv" "(" ClassTable "," Fields ")" "=" Env }
   { ClassTable ";" Env "|-" Methods "OK" }
   { "typevars" "(" ClassTable ")" "=" TypeVars }
