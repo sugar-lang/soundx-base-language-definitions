@@ -198,7 +198,7 @@ context-free syntax
 
 // Import declarations
 lexical syntax
-  PID "." ID -> QID
+  PID "." ID -> QID {sx-atoms}
 
 context-free syntax
   "import" q:QID ";" -> Import {sx-import-dec(q)}
@@ -222,6 +222,7 @@ lexical syntax
   "m" ALPHANUMS        -> MVMethodName
   "pkg" ALPHANUMS      -> MVPID
   "q" ALPHANUMS        -> MVQID
+  "~q" ALPHANUMS       -> MVQID
   "cbody" ALPHANUMS    -> MVClassBody
   "con" ALPHANUMS      -> MVConstructor
   "conbody" ALPHANUMS  -> MVConstructorBody
@@ -235,11 +236,12 @@ lexical syntax
   MVStatement "*"      -> MVStatements
   "e" ALPHANUMS        -> MVExpr
   MVExpr "*"           -> MVExprs
+  MVExpr "'"           -> MVExprsTail
   "tld" ALPHANUMS "*"  -> MVToplevelDecs
-  aop ALPHANUMS        -> MVARITHOP
-  lop ALPHANUMS        -> MVLOGOP
-  cop ALPHANUMS        -> MVCMPOP
-  eop ALPHANUMS        -> MVEQOP
+  "aop" ALPHANUMS      -> MVARITHOP
+  "lop" ALPHANUMS      -> MVLOGOP
+  "cop" ALPHANUMS      -> MVCMPOP
+  "eop" ALPHANUMS      -> MVEQOP
 
 lexical restrictions
   MVVar
@@ -289,6 +291,7 @@ variables
   MVStatements      -> Statement       {prefer}
   MVExpr            -> Expr            {prefer}
   MVExprs           -> Exprs           {prefer}
+  MVExprsTail       -> ExprsTail       {prefer}
   MVToplevelDecs    -> ToplevelDecs    {prefer}
   MVARITHOP         -> ARITHOP         {prefer}
   MVLOGOP           -> LOGOP           {prefer}
@@ -437,13 +440,16 @@ judgement forms
   { "localenv" "(" ClassTable "," Parameters ")" "=" Env }
   { "localenvTail" "(" ClassTable "," ParametersTail ")" "=" Env }
   { ClassTable ";" Env ";" Env "|-" Statements "~" RetType }
-  { ClassTable ";" Env ";" Env "|-" Expr ":" AType } // TODO
-  { ClassTable ";" Env ";" Env "|-" Exprs ":" ATypes } // TODO
-  { ClassTable "|-" AType "<:" AType } // TODO
-  { ClassTable "|-" ATypes "<:" ATypes } // TODO
-  { ID ":" AType "in" Env ";" Env } // TODO
-  { ID ":" AType "in" Env } // TODO
-  { "typevarsAsTypes" "(" TypeVars ")" "=" ATypes } // TODO
+  { ClassTable ";" Env ";" Env "|-" Expr ":" AType }
+  { ClassTable ";" Env ";" Env "|-" Exprs ":" ATypes }
+  { "atypesTail" "(" ClassTable "," Env "," Env "," ExprsTail ")" "=" ATypes }
+  { ClassTable "|-" AType "<:" AType }
+  { ClassTable "|-" ATypes "<:" ATypes }
+  { ID ":" AType "in" Env ";" Env }
+  { ID ":" AType "in" Env }
+  { "typevarsAsTypes" "(" TypeVars ")" "=" ATypes }
+  { AType "=|=" AType }
+  { ATypes "=|=" ATypes }
   
 
 inductive definitions
@@ -739,18 +745,18 @@ inductive definitions
     c|->q :: I* . q = ct
 
   CTLQ-ImportNext:
-    (q0 =/= q) (I*.q = ct)
-    ----------------------
-    c0|->q0 :: I* . q = ct
+    (~q0 =/= ~q) (I*.~q = ct)
+    -------------------------
+    c0|->~q0 :: I* . ~q = ct
 
   CTLQ-ClassFound:
     --------------------
     I*,c|->q:ct . q = ct
 
   CTLQ-ClassNext:
-    (q0 =/= q) (I*.q = ct)
-    ----------------------
-    I*,c0|->q0:ct . q = ct
+    (~q0 =/= ~q) (I*.~q = ct)
+    -------------------------
+    I*,c0|->~q0:ct . ~q = ct
 
   // Qualify class name (CTQ: class table qualify)
   CTQ-ImportFound:
@@ -783,6 +789,7 @@ inductive definitions
     class(I*, c |-> q : {t*, msig*, t, X*}) = q s*
 
   // Type variables
+  // Disjointness (TVD: type variables disjoint)
   TVD-Last:
     ---------------------
     disjoint(X) = X :: []
@@ -792,6 +799,7 @@ inductive definitions
     --------------------------------
     disjoint(X, X+) = X :: X*
 
+  // Type variable in list (TVI: type variable inclusion)
   TVI-Found:
     ------------
     X in X :: X*
@@ -801,6 +809,7 @@ inductive definitions
     -------------------
     X in Y :: X*
 
+  // Type variable not in list (TVE: type variable exclusion)
   TVE-Empty:
     ----------
     X notin []
@@ -810,6 +819,7 @@ inductive definitions
     ----------------------
     X notin Y :: X*
 
+  // Length comparison (TVL: type variables length)
   TVL-Empty:
     -----------
     |[]| = |[]|
@@ -818,6 +828,16 @@ inductive definitions
     |X*| = |t*|
     -----------------
     |X::X*| = |t::t*|
+
+  // Type variables as abstract types (TVT: type variables types)
+  TVT-Empty:
+    ------------------------
+    typevarsAsTypes([]) = []
+
+  TVT-NonEmpty:
+    typevarsAsTypes(X*) = t*
+    ------------------------------
+    typevarsAsTypes(X::X*) = X::t*
 
   // Substitution
   // Abstract types (ST: substitution type)
@@ -991,7 +1011,7 @@ inductive definitions
     ---------------------------------
     CT; Ef; El |- { stm1* } stm* ~ rt
 
-  // Expressions
+  // Expressions (E: expression)
   E-Int:
     ---------------------
     CT; Ef; El |- n : int
@@ -1082,7 +1102,23 @@ inductive definitions
     CT; Ef; El |- e : boolean
     ---------------------------
     CT; Ef; El |- ! e : boolean
-  
+
+  // Expression lists (EL: expression list)
+  EL-Empty:
+    ------------------
+    CT; Ef; El |- : []
+
+
+  // Expressions tail (ELT: expression list tail)
+  CLT-Empty:
+    -----------------------------
+    atypesTail(CT, Ef, El, ) = []
+
+  CLT-NonEmpty:
+    (CT; Ef; El |- e : t) (atypesTail(CT, Ef, El, e') = t*)
+    -------------------------------------------------------
+    atypesTail(CT, Ef, El, , e e') = t :: t*
+
   // Environments
   // Check that variable is not bound (ED: environmemnt domain)
   ED-Empty:
@@ -1135,6 +1171,87 @@ inductive definitions
     -----------------------------------
     localenvTail(CT, , T x p') = El,x:t
 
+  // Lookup in local and field environment (LLF: lookup local field)
+  LLF-FoundLocal:
+    -------------------
+    x : t in Ef; El,x:t
+
+  LLF-NextLocal:
+    (x=/=y) (x : t in Ef; El)
+    -------------------------
+    x : t in Ef; El,y:s
+
+  LLF-FoundField:
+    --------------------
+    x : t in Ef,x:t; (/)
+
+  LLF-NextField:
+    (x=/=y) (x : t in Ef; (/))
+    --------------------------
+    x : t in Ef,y:s; (/)
+
+  // Lookup in local environment (LL: lookup local)
+  LL-FoundLocal:
+    ---------------
+    x : t in El,x:t
+
+  LL-NextLocal:
+    (x=/=y) (x : t in El)
+    ---------------------
+    x : t in El,y:s
+
+  // Subtyping (ST: subtyping)
+  ST-Refl:
+    ------------
+    CT |- t <: t
+
+  ST-Object:
+    --------------------
+    CT |- q t* <: Object
+
+  ST-SuperClass:
+    (CT.q1 = {s*, msig*, s, X*}) ([X* |-> t1*](s) = t)
+    --------------------------------------------------
+    CT |- q1 t1* <: t
+
+  ST-Trans:
+    (CT.q1 = {s*, msig*, s, X*})
+    [X* |-> t1*](s) = s1
+    t =|= s1
+    CT |- s1 <: t
+    ----------------------------
+    CT |- q1 t1* <: t
+
+  // Class type inequality
+  // Inequality of one class type (CNQ: class not equal)
+  CNQ-ClassName:
+    q1 =|= q2
+    -----------------
+    q1 t1* =|= q2 t2*
+
+  CNQ-Args:
+    t1* =|= t2*
+    ---------------
+    q t1* =|= q t2*
+
+  // Inequality of list of class types (CNQL: class not equal list)
+  CNQL-Empty1:
+    --------------
+    [] =|= t :: t*
+
+  CNQL-Empty2:
+    --------------
+    t :: t* =|= []
+
+  CNQL-NonEmpty1:
+    t1 =|= t2
+    -----------------------
+    t1 :: t1* =|= t2 :: t2*
+
+  CNQL-NonEmpty2:
+    t1* =|= t2*
+    ---------------------
+    t :: t1* =|= t :: t2*
 
 // Extension declarations
 context-free syntax
