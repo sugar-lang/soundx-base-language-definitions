@@ -57,10 +57,10 @@ context-free syntax
 
 // Classes
 context-free syntax
-  "public" "class" id:ID ClassBody                                        -> Class {sx-body-dec, sx-namespace-suffix(id)}
-  "public" "class" id:ID "extends" SuperClass ClassBody                   -> Class {sx-body-dec, sx-namespace-suffix(id)}
-  "public" "class" id:ID "<" TypeVars1 ">" ClassBody                      -> Class {sx-body-dec, sx-namespace-suffix(id)}
-  "public" "class" id:ID "<" TypeVars1 ">" "extends" SuperClass ClassBody -> Class {sx-body-dec, sx-namespace-suffix(id)}
+  "public" "class" c:ID ClassBody                                        -> Class {sx-body-dec, sx-namespace-suffix(c)}
+  "public" "class" c:ID "extends" SuperClass ClassBody                   -> Class {sx-body-dec, sx-namespace-suffix(c)}
+  "public" "class" c:ID "<" TypeVars1 ">" ClassBody                      -> Class {sx-body-dec, sx-namespace-suffix(c)}
+  "public" "class" c:ID "<" TypeVars1 ">" "extends" SuperClass ClassBody -> Class {sx-body-dec, sx-namespace-suffix(c)}
 
   GenClass -> SuperClass
   ID       -> SuperClass
@@ -325,6 +325,7 @@ context-free syntax
 
   // Class types
   "{" ATypes "," MethSigs "," AType "," TypeVars "}" -> ClassType
+  "{}"                                               -> ClassType
 
   // Imports and class table
   "[]"                      -> Imports
@@ -343,7 +344,6 @@ context-free syntax
 
   // Module interface
   ClassType -> ModuleInterface
-  "{}"      -> ModuleInterface
 
 lexical syntax
   "Object" -> ID {reject}
@@ -398,8 +398,8 @@ variables
 interface ModuleInterface
 
 judgement forms
-  { "suffix" "(" QID ")" "=" ID } // TODO must be provided by SoundX
-  { "concat" "(" PID "," ID ")" "=" QID } // TODO must be provided by SoundX
+  // { "suffix" "(" QID ")" "=" ID } // TODO must be provided by SoundX
+  // { "concat" "(" PID "," ID ")" "=" QID } // TODO must be provided by SoundX
   { ClassTable "|-" ToplevelDecs "=>" ModuleInterface }
   { ClassTable "|" PID "|-" ToplevelDecs "=>" ModuleInterface }
   { ClassTable "+" ID "|->" QID "=" ClassTable }
@@ -466,9 +466,10 @@ inductive definitions
 
   TLP-ClassMonObj:
     c notin dom(CT)
-    msigs(CT, [], Object, cbody) = msig*
-    conparams(CT, c, [], cbody) = t*
     concat(pkg, c) = q
+    CT + c|->q:{[], [], Object, []} = CT0
+    msigs(CT0, [], Object, cbody) = msig*
+    conparams(CT0, c, [], cbody) = t*
     CT + c |-> q : {t*, msig*, Object, []} = CT1
     CT1 |- cbody OK
     -----------------------------------------------------------
@@ -477,9 +478,10 @@ inductive definitions
   TLP-ClassMonSup:
     c notin dom(CT)
     normSuperClass(CT, X*, sc) = t
-    msigs(CT, [], t, cbody) = msig*
-    conparams(CT, c, [], cbody) = t*
     concat(pkg, c) = q
+    CT + c|->q:{[], [], t, []} = CT0
+    msigs(CT0, [], t, cbody) = msig*
+    conparams(CT0, c, [], cbody) = t*
     CT + c |-> q : {t*, msig*, t, []} = CT1
     CT1 |- cbody OK
     -----------------------------------------------------------------
@@ -488,9 +490,10 @@ inductive definitions
   TLP-ClassGenObj:
     c notin dom(CT)
     disjoint(X+) = X*
-    msigs(CT, X*, Object, cbody) = msig*
-    conparams(CT, c, X*, cbody) = t*
     concat(pkg, c) = q
+    CT + c|->q:{[], [], Object, X*} = CT0
+    msigs(CT0, X*, Object, cbody) = msig*
+    conparams(CT0, c, X*, cbody) = t*
     CT + c |-> q : {t*, msig*, Object, X*} = CT1
     CT1 |- cbody OK
     ---------------------------------------------------------------
@@ -499,10 +502,11 @@ inductive definitions
   TLP-ClassGenSup:
     c notin dom(CT)
     disjoint(X+) = X*
-    normSuperClass(CT, X*, sc) = t
-    msigs(CT, X*, t, cbody) = msig*
-    conparams(CT, c, X*, cbody) = t*
     concat(pkg, c) = q
+    normSuperClass(CT, X*, sc) = t
+    CT + c|->q:{[], [], t, X*} = CT0
+    msigs(CT0, X*, t, cbody) = msig*
+    conparams(CT0, c, X*, cbody) = t*
     CT + c |-> q : {t*, msig*, t, X*} = CT1
     CT1 |- cbody OK
     ---------------------------------------------------------------------
@@ -645,7 +649,7 @@ inductive definitions
   NC-MonClass:
     (c notin X*) (qualify(CT, c) = q)
     ---------------------------------
-    norm(CT, X*, c) = q
+    norm(CT, X*, c) = q []
 
   NC-GenClass:
     qualify(CT, c) = q
@@ -655,7 +659,7 @@ inductive definitions
     --------------------------
     norm(CT, X*, c<T+>) = q t*
 
- // List of classes and type variables (NLC: norm list class)
+  // List of classes and type variables (NLC: norm list class)
   NLC-Last:
     norm(CT, X*, T) = t
     -----------------------------
@@ -912,7 +916,7 @@ inductive definitions
   M-Type:
     localenv(CT, p*) = El
     typevars(CT) = X*
-    norm(CT, X*, T) = t
+    normPrim(CT, X*, T) = t
     CT; Ef; El |- stm* ~ t
     CT; Ef |- meth* OK
     ------------------------------------------
@@ -1021,9 +1025,13 @@ inductive definitions
     -----------------------------
     CT; Ef; El |- false : boolean
 
-  E-Null:
+  E-NullClass:
     -------------------------
     CT; Ef; El |- null : q t*
+
+  E-NullVar:
+    ----------------------
+    CT; Ef; El |- null : X
 
   E-Var:
     x:t in Ef;El
@@ -1197,27 +1205,37 @@ inductive definitions
     ---------------------
     x : t in El,y:s
 
-  // Subtyping (ST: subtyping)
-  ST-Refl:
+  // Subtyping (SUB: subtyping)
+  SUB-Refl:
     ------------
     CT |- t <: t
 
-  ST-Object:
+  SUB-Object:
     --------------------
     CT |- q t* <: Object
 
-  ST-SuperClass:
+  SUB-SuperClass:
     (CT.q1 = {s*, msig*, s, X*}) ([X* |-> t1*](s) = t)
     --------------------------------------------------
     CT |- q1 t1* <: t
 
-  ST-Trans:
+  SUB-Trans:
     (CT.q1 = {s*, msig*, s, X*})
     [X* |-> t1*](s) = s1
     t =|= s1
     CT |- s1 <: t
     ----------------------------
     CT |- q1 t1* <: t
+
+  // Subtyping of list of types (SUBL: subtyping list)
+  SUBL-Empty:
+    --------------
+    CT |- [] <: []
+
+  SUBL-NonEmpty:
+    (CT |- t1 <: t2) (CT |- t1* <: t2*)
+    -----------------------------------
+    CT |- t1 :: t1* <: t2 :: t2*
 
   // Class type inequality
   // Inequality of one class type (CNQ: class not equal)
