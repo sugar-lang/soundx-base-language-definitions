@@ -34,6 +34,8 @@ lexical syntax
   "new"       -> Keyword
   "extension" -> Keyword
   "this"      -> Keyword
+  "true"      -> Keyword
+  "false"     -> Keyword
   Keyword     -> ID {reject}
 
 // Types
@@ -141,6 +143,8 @@ context-free syntax
 
   INT                                   -> Expr
   "null"                                -> Expr
+  "true"                                -> Expr
+  "false"                               -> Expr
   VarRef                                -> Expr
   "this"                                -> Expr
   MethodCall                            -> Expr
@@ -242,6 +246,8 @@ lexical syntax
   "lop" ALPHANUMS      -> MVLOGOP
   "cop" ALPHANUMS      -> MVCMPOP
   "eop" ALPHANUMS      -> MVEQOP
+
+  Keyword -> MVINT {reject}
 
 lexical restrictions
   MVVar
@@ -1008,7 +1014,7 @@ inductive definitions
 
   S-Block:
     CT; Ef; El |- stm1* ~ void
-    CT; Ef; El |- stm ~ rt
+    CT; Ef; El |- stm* ~ rt
     ---------------------------------
     CT; Ef; El |- { stm1* } stm* ~ rt
 
