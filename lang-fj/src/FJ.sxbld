@@ -202,7 +202,7 @@ context-free syntax
 
 // Import declarations
 lexical syntax
-  PID "." ID -> QID {sx-atoms}
+  PID "." ID -> QID {sx-atoms, sx-module-identifier}
 
 context-free syntax
   "import" q:QID ";" -> Import {sx-import-dec(q)}
@@ -674,7 +674,7 @@ inductive definitions
   NLC-Cons:
     (norm(CT, X*, T) = t) (normList(CT, X*, T+) = t*)
     -------------------------------------------------
-    normList(CT, X*, T,T+) = t :: t*
+    normList(CT, X*, T, T+) = t :: t*
 
   // Types (NT: normalise types)
   NT-Int:
@@ -743,7 +743,7 @@ inductive definitions
   CTL-ClassNext:
     (c0 =/= c) (I*(c) = ct)
     -----------------------
-    I*,c0|->q0:ct(c) = ct
+    I*,c0|->q0:ct0(c) = ct
 
   // Qualified lookup (CTLQ: class table lookup qualified)
   CTLQ-ImportFound:
