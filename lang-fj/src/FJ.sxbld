@@ -150,8 +150,10 @@ context-free syntax
   MethodCall                            -> Expr
   "new" ID "(" Exprs ")"                -> Expr
   "new" ID "<" Types1 ">" "(" Exprs ")" -> Expr
-  Expr ARITHOP Expr                     -> Expr {left}
-  Expr LOGOP Expr                       -> Expr {left}
+  Expr ARITHOP1 Expr                    -> Expr {left}
+  Expr ARITHOP2 Expr                    -> Expr {left}
+  Expr LOGOP1 Expr                      -> Expr {left}
+  Expr LOGOP2 Expr                      -> Expr {left}
   "!" Expr                              -> Expr
   Expr CMPOP Expr                       -> Expr {non-assoc}
   Expr EQOP Expr                        -> Expr {non-assoc}
@@ -162,13 +164,13 @@ context-free syntax
                      -> ExprsTail
   "," Expr ExprsTail -> ExprsTail
 
-  "+" -> ARITHOP
-  "-" -> ARITHOP
-  "*" -> ARITHOP
-  "/" -> ARITHOP
+  "*" -> ARITHOP1
+  "/" -> ARITHOP1
+  "+" -> ARITHOP2
+  "-" -> ARITHOP2
 
-  "&&" -> LOGOP
-  "||" -> LOGOP
+  "&&" -> LOGOP1
+  "||" -> LOGOP2
 
   "<"  -> CMPOP
   "<=" -> CMPOP
@@ -178,20 +180,20 @@ context-free syntax
   "==" -> EQOP
   "!=" -> EQOP
 
+  ARITHOP1 -> ARITHOP
+  ARITHOP2 -> ARITHOP
+
+  LOGOP1 -> LOGOP
+  LOGOP2 -> LOGOP
+
 context-free priorities
-  { "!" Expr       -> Expr } >
-  { Expr "*" Expr  -> Expr
-    Expr "/" Expr  -> Expr } >
-  { Expr "+" Expr  -> Expr 
-    Expr "-" Expr  -> Expr } >
-  { Expr "<" Expr  -> Expr
-    Expr "<=" Expr -> Expr
-    Expr ">=" Expr -> Expr
-    Expr ">" Expr  -> Expr } >
-  { Expr "==" Expr -> Expr 
-    Expr "!=" Expr -> Expr } >
-  { Expr "&&" Expr -> Expr } >
-  { Expr "||" Expr -> Expr }
+  { "!" Expr           -> Expr } >
+  { Expr ARITHOP1 Expr -> Expr } >
+  { Expr ARITHOP2 Expr -> Expr } >
+  { Expr CMPOP Expr    -> Expr } >
+  { Expr EQOP Expr     -> Expr } >
+  { Expr LOGOP1 Expr   -> Expr } >
+  { Expr LOGOP2 Expr   -> Expr }
 
 // Package declarations
 lexical syntax
