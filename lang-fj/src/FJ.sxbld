@@ -892,23 +892,28 @@ inductive definitions
 
   // Replace a variable (SV: substitution variable)
   SV-Found:
-    ------------------------
-    [X::X* |-> t::t*](X) = t
+    ----------------------------
+    replace(X::X*, t::t*, X) = t
 
   SV-Empty:
-    ------------------
-    [[] |-> []](X) = X
+    ----------------------
+    replace([], [], X) = X
 
   SV-Next:
-    (X =/= Y) ([X* |-> t*](Y) = s)
-    ------------------------------
-    [X::X* |-> t::t*](Y) = s
+    (X =/= Y) (replace(X*, t*, Y) = s)
+    ----------------------------------
+    replace(X::X*, t::t*, Y) = s
 
   // Method types (SM: substitution method)
   SM-MethType:
     ([X* |-> t*](s*) = s1*) ([X* |-> t*](s) = s1)
     ---------------------------------------------
     mt[X* |-> t*](s* -> s) = s1* -> s1
+
+  SM-MethTypeVoid:
+    [X* |-> t*](s*) = s1*
+    ---------------------------------------
+    mt[X* |-> t*](s* -> void) = s1* -> void
 
   // Class body (CB: class body)
   CB-Implicit:
