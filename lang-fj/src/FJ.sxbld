@@ -491,7 +491,7 @@ inductive definitions
 
   TLP-ClassMonSup:
     c notin dom(CT)
-    normSuperClass(CT, X*, sc) = t
+    normSuperClass(CT, [], sc) = t
     concat(pkg, c) = q
     CT + c|->q:{[], [], t, []} = CT0
     msigs(CT0, [], t, cbody) = msig*
@@ -771,7 +771,7 @@ inductive definitions
   CTLQ-ClassNext:
     (~q0 =/= ~q) (I*.~q = ct)
     -------------------------
-    I*,c0|->~q0:ct . ~q = ct
+    I*,c0|->~q0:ct0 . ~q = ct
 
   // Qualify class name (CTQ: class table qualify)
   CTQ-ImportFound:
