@@ -180,12 +180,6 @@ context-free syntax
   "==" -> EQOP
   "!=" -> EQOP
 
-  ARITHOP1 -> ARITHOP
-  ARITHOP2 -> ARITHOP
-
-  LOGOP1 -> LOGOP
-  LOGOP2 -> LOGOP
-
 context-free priorities
   { "!" Expr           -> Expr } >
   { Expr ARITHOP1 Expr -> Expr } >
@@ -246,8 +240,10 @@ lexical syntax
   MVExpr "*"           -> MVExprs
   MVExpr "'"           -> MVExprsTail
   "tld" ALPHANUMS "*"  -> MVToplevelDecs
-  "aop" ALPHANUMS      -> MVARITHOP
-  "lop" ALPHANUMS      -> MVLOGOP
+  "aop1" ALPHANUMS     -> MVARITHOP1
+  "aop2" ALPHANUMS     -> MVARITHOP2
+  "lop1" ALPHANUMS     -> MVLOGOP1
+  "lop2" ALPHANUMS     -> MVLOGOP2
   "cop" ALPHANUMS      -> MVCMPOP
   "eop" ALPHANUMS      -> MVEQOP
 
@@ -271,8 +267,10 @@ lexical restrictions
   MVSuperClass
   MVStatement
   MVExpr
-  MVARITHOP
-  MVLOGOP
+  MVARITHOP1
+  MVARITHOP2
+  MVLOGOP1
+  MVLOGOP2
   MVCMPOP
   MVEQOP
     -/- [a-zA-Z0-9]
@@ -306,8 +304,10 @@ variables
   MVExprs           -> Exprs           {prefer}
   MVExprsTail       -> ExprsTail       {prefer}
   MVToplevelDecs    -> ToplevelDecs    {prefer}
-  MVARITHOP         -> ARITHOP         {prefer}
-  MVLOGOP           -> LOGOP           {prefer}
+  MVARITHOP1        -> ARITHOP1        {prefer}
+  MVARITHOP2        -> ARITHOP2        {prefer}
+  MVLOGOP1          -> LOGOP1          {prefer}
+  MVLOGOP2          -> LOGOP2          {prefer}
   MVCMPOP           -> CMPOP           {prefer}
   MVEQOP            -> EQOP            {prefer}
   
@@ -1148,15 +1148,25 @@ inductive definitions
     -----------------------------------
     CT; Ef; El |- new k<T+>(e*) : q t1*
 
-  E-ArithOp:
+  E-ArithOp1:
     (CT; Ef; El |- e1 : int) (CT; Ef; El |- e2 : int)
     -------------------------------------------------
-    CT; Ef; El |- e1 aop e2 : int
+    CT; Ef; El |- e1 aop1 e2 : int
 
-  E-LogOp:
+  E-ArithOp2:
+    (CT; Ef; El |- e1 : int) (CT; Ef; El |- e2 : int)
+    -------------------------------------------------
+    CT; Ef; El |- e1 aop2 e2 : int
+
+  E-LogOp1:
     (CT; Ef; El |- e1 : boolean) (CT; Ef; El |- e2 : boolean)
     ---------------------------------------------------------
-    CT; Ef; El |- e1 lop e2 : boolean
+    CT; Ef; El |- e1 lop1 e2 : boolean
+
+  E-LogOp2:
+    (CT; Ef; El |- e1 : boolean) (CT; Ef; El |- e2 : boolean)
+    ---------------------------------------------------------
+    CT; Ef; El |- e1 lop2 e2 : boolean
 
   E-CmpOp:
     (CT; Ef; El |- e1 : int) (CT; Ef; El |- e2 : int)
