@@ -230,6 +230,8 @@ lexical syntax
   "cbody" ALPHANUMS    -> MVClassBody
   "con" ALPHANUMS      -> MVConstructor
   "conbody" ALPHANUMS  -> MVConstructorBody
+  "asgn" ALPHANUMS     -> MVAssignment
+  MVAssignment "*"     -> MVAssignments
   "fld" ALPHANUMS "*"  -> MVFields
   "meth" ALPHANUMS "*" -> MVMethods
   "mbody" ALPHANUMS    -> MVMethodBody
@@ -262,6 +264,7 @@ lexical restrictions
   MVClassBody
   MVConstructor
   MVConstructorBody
+  MVAssignment
   MVMethodBody
   MVSuperClass
   MVStatement
@@ -287,6 +290,8 @@ variables
   MVClassBody       -> ClassBody       {prefer}
   MVConstructor     -> Constructor     {prefer}  
   MVConstructorBody -> ConstructorBody {prefer}
+  MVAssignment      -> Assignment      {prefer}
+  MVAssignments     -> Assignments     {prefer}
   MVFields          -> Fields          {prefer}
   MVMethods         -> Methods         {prefer}
   MVMethodBody      -> MethodBody      {prefer}
@@ -435,6 +440,9 @@ judgement forms
   { "[" TypeVars "|->" ATypes "]" "(" ATypes ")" "=" ATypes }
   { "replace" "(" TypeVars "," ATypes "," ID ")" "=" AType }
   { ClassTable "|-" ClassBody "OK" }
+  { ClassTable ";" Env "|-" Constructor "OK" }
+  { ClassTable ";" Env ";" Env "|-" ConstructorBody "OK" }
+  { ClassTable ";" Env ";" Env "|-" Assignments "OK" }
   { "fieldenv" "(" ClassTable "," Fields ")" "=" Env }
   { ClassTable ";" Env "|-" Methods "OK" }
   { "typevars" "(" ClassTable ")" "=" TypeVars }
@@ -900,12 +908,61 @@ inductive definitions
     ---------------------------------------------
     mt[X* |-> t*](s* -> s) = s1* -> s1
 
-  // Class body
+  // Class body (CB: class body)
   CB-Implicit:
     fieldenv(CT, fld*) = Ef
     CT; Ef |- meth* OK
     -----------------------
     CT |- { fld* meth* } OK
+
+  CB-Explicit:
+    fieldenv(CT, fld*) = Ef
+    CT; Ef |- con OK
+    CT; Ef |- meth* OK
+    ---------------------------
+    CT |- { fld* con meth* } OK
+
+  // Check constructor
+  CON-Check:
+    localenv(CT, p*) = El
+    CT; Ef; El |- conbody OK
+    ----------------------------------
+    CT; Ef |- public k (p*) conbody OK
+
+  CONB-Super:
+    class(CT) = q t*
+    CT.q = {s*, msig*, q0 s0*, X*}
+    CT.q1 = {s1*, msig1*, s1, X1*}
+    CT; Ef; El |- e* : t1*
+    CT |- t1* <: s1*
+    CT; Ef; El |- asgn* OK
+    -------------------------------------
+    CT; Ef; El |- { super(e*); asgn* } OK
+
+  CONB-NoSuper:
+    CT; Ef; El |- asgn* OK
+    --------------------------
+    CT; Ef; El |- { asgn* } OK
+
+  CONA-Empty:
+    ----------------
+    CT; Ef; El |- OK
+
+  CONA-Var:
+    x:t in Ef;El
+    CT; Ef; El |- e : s
+    CT |- s <: t
+    CT; Ef; El |- asgn* OK
+    -----------------------------
+    CT; Ef; El |- x = e; asgn* OK
+
+  CONA-This:
+    x:t in Ef
+    CT; Ef; El |- e : s
+    CT |- s <: t
+    CT; Ef; El |- asgn* OK
+    ----------------------------------
+    CT; Ef; El |- this.x = e; asgn* OK
 
   // Check methods (M: methods)
   M-Empty:
@@ -941,7 +998,7 @@ inductive definitions
   S-VarDecl:
     x notin dom(El)
     typevars(CT) = X*
-    norm(CT, X*, T) = t
+    normPrim(CT, X*, T) = t
     CT; Ef; El,x:t |- stm* ~ rt
     ----------------------------
     CT; Ef; El |- T x; stm* ~ rt
@@ -949,7 +1006,7 @@ inductive definitions
   S-VarDeclAssign:
     x notin dom(El)
     typevars(CT) = X*
-    norm(CT, X*, T) = t
+    normPrim(CT, X*, T) = t
     CT; Ef; El |- e : s
     CT |- s <: t
     CT; Ef; El,x:t |- stm* ~ rt
@@ -960,7 +1017,7 @@ inductive definitions
     x:t in Ef;El
     CT; Ef; El |- e : s
     CT |- s <: t
-    CT; Ef; El,x:t |- stm* ~ rt
+    CT; Ef; El |- stm* ~ rt
     ------------------------------
     CT; Ef; El |- x = e; stm* ~ rt
 
