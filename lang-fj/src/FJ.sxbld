@@ -294,7 +294,7 @@ variables
   MVParametersTail  -> ParametersTail  {prefer}
   MVSuperClass      -> SuperClass      {prefer}
   MVStatement       -> Statement       {prefer}
-  MVStatements      -> Statement       {prefer}
+  MVStatements      -> Statements      {prefer}
   MVExpr            -> Expr            {prefer}
   MVExprs           -> Exprs           {prefer}
   MVExprsTail       -> ExprsTail       {prefer}
