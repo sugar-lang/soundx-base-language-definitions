@@ -987,7 +987,8 @@ inductive definitions
     localenv(CT, p*) = El
     typevars(CT) = X*
     normPrim(CT, X*, T) = t
-    CT; Ef; El |- stm* ~ t
+    CT; Ef; El |- stm* ~ s
+    CT |- s <: t
     CT; Ef |- meth* OK
     ------------------------------------------
     CT; Ef |- public T m(p*) { stm* } meth* OK
