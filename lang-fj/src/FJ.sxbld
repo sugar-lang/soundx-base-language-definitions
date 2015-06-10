@@ -1193,6 +1193,10 @@ inductive definitions
     ------------------
     CT; Ef; El |- : []
 
+  EL-NonEmpty:
+    (CT; Ef; El |- e : t) (atypesTail(CT, Ef, El, e') = t*)
+    -------------------------------------------------------
+    CT; Ef; El |- e e' : t :: t*
 
   // Expressions tail (ELT: expression list tail)
   CLT-Empty:
