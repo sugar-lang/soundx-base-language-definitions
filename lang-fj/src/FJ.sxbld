@@ -1189,6 +1189,11 @@ inductive definitions
     ---------------------------
     CT; Ef; El |- ! e : boolean
 
+  E-Subsumption:
+    (CT; Ef; El |- e : t) (CT |- t <: s)
+    ------------------------------------
+    CT; Ef; El |- e : s
+
   // Expression lists (EL: expression list)
   EL-Empty:
     ------------------
