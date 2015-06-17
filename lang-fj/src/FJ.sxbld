@@ -1194,6 +1194,16 @@ inductive definitions
     ------------------------------------
     CT; Ef; El |- e : s
 
+  E-Weak:
+    (CT; Ef; El |- e : t) (x notin dom(El))
+    ---------------------------------------
+    CT; Ef; El,x:s |- e : t
+
+  E-Perm2:
+    CT; Ef; El,x1:s1,x2:s2 |- e : t
+    -------------------------------
+    CT; Ef; El,x2:s2,x1:s1 |- e : t
+
   // Expression lists (EL: expression list)
   EL-Empty:
     ------------------
@@ -1357,6 +1367,9 @@ inductive definitions
     t1* =|= t2*
     ---------------------
     t :: t1* =|= t :: t2*
+
+// Freshness condition
+fresh x : ID in E : Env by x notin dom(E)
 
 // Extension declarations
 context-free syntax
