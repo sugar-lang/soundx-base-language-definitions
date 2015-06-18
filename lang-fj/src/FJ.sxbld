@@ -1306,9 +1306,17 @@ inductive definitions
     x : t in El,y:s
 
   // Subtyping (SUB: subtyping)
-  SUB-Refl:
-    ------------
-    CT |- t <: t
+  SUB-Int:
+    ----------------
+    CT |- int <: int
+
+  SUB-Boolean:
+    ------------------------
+    CT |- boolean <: boolean
+
+  SUB-ClassRefl:
+    ------------------
+    CT |- q t* <: q t*
 
   SUB-Object:
     --------------------
@@ -1340,7 +1348,7 @@ inductive definitions
   // Class type inequality
   // Inequality of one class type (CNQ: class not equal)
   CNQ-ClassName:
-    q1 =|= q2
+    q1 =/= q2
     -----------------
     q1 t1* =|= q2 t2*
 
