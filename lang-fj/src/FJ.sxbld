@@ -1306,17 +1306,21 @@ inductive definitions
     x : t in El,y:s
 
   // Subtyping (SUB: subtyping)
-  SUB-Int:
-    ----------------
-    CT |- int <: int
+  // SUB-Int:
+  //   ----------------
+  //   CT |- int <: int
 
-  SUB-Boolean:
-    ------------------------
-    CT |- boolean <: boolean
+  // SUB-Boolean:
+  //   ------------------------
+  //   CT |- boolean <: boolean
 
-  SUB-ClassRefl:
-    ------------------
-    CT |- q t* <: q t*
+  // SUB-ClassRefl:
+  //   ------------------
+  //   CT |- q t* <: q t*
+
+  SUB-Refl:
+    ------------
+    CT |- t <: t
 
   SUB-Object:
     --------------------
