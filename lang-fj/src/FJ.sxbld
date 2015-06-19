@@ -461,9 +461,6 @@ judgement forms
   { ID ":" AType "in" Env ";" Env }
   { ID ":" AType "in" Env }
   { "typevarsAsTypes" "(" TypeVars ")" "=" ATypes }
-  //{ AType "=|=" AType }
-  //{ ATypes "=|=" ATypes }
-  
 
 inductive definitions
   // Toplevel declarations (TL: toplevel)
@@ -597,8 +594,8 @@ inductive definitions
     mtype(m, []) = undef
 
   MT-Next:
-    (m0 =/= m) (mtype(m, msig*) = mlres)
-    ------------------------------------
+    (m0 =/=ID m) (mtype(m, msig*) = mlres)
+    --------------------------------------
     mtype(m, m0:mt :: msig*) = mlres
 
   MT-Found:
@@ -726,13 +723,13 @@ inductive definitions
     c notin dom([])
 
   CTD-ImportsClass:
-    (c =/= c0) (c notin dom(I*))
+    (c =/=ID c0) (c notin dom(I*))
     -------------------------------
     c notin dom(I*, c0 |-> q0 : ct)
 
   CTD-Imports:
-    (c =/= c0) (c notin dom(I*))
-    ----------------------------
+    (c =/=ID c0) (c notin dom(I*))
+    ------------------------------
     c notin dom(c0 |-> q0 :: I*)
 
   // Unqualified lookup (CTL: class table lookup)
@@ -742,8 +739,8 @@ inductive definitions
     c|->q :: I*(c) = ct
 
   CTL-ImportNext:
-    (c0 =/= c) (I*(c) = ct)
-    -----------------------
+    (c0 =/=ID c) (I*(c) = ct)
+    -------------------------
     c0|->q0 :: I*(c) = ct
 
   CTL-ClassFound:
@@ -751,8 +748,8 @@ inductive definitions
     I*,c|->q:ct(c) = ct
 
   CTL-ClassNext:
-    (c0 =/= c) (I*(c) = ct)
-    -----------------------
+    (c0 =/=ID c) (I*(c) = ct)
+    -------------------------
     I*,c0|->q0:ct0(c) = ct
 
   // Qualified lookup (CTLQ: class table lookup qualified)
@@ -762,8 +759,8 @@ inductive definitions
     c|->q :: I* . q = ct
 
   CTLQ-ImportNext:
-    (~q0 =/= ~q) (I*.~q = ct)
-    -------------------------
+    (~q0 =/=QID ~q) (I*.~q = ct)
+    ----------------------------
     c0|->~q0 :: I* . ~q = ct
 
   CTLQ-ClassFound:
@@ -771,8 +768,8 @@ inductive definitions
     I*,c|->q:ct . q = ct
 
   CTLQ-ClassNext:
-    (~q0 =/= ~q) (I*.~q = ct)
-    -------------------------
+    (~q0 =/=QID ~q) (I*.~q = ct)
+    ----------------------------
     I*,c0|->~q0:ct0 . ~q = ct
 
   // Qualify class name (CTQ: class table qualify)
@@ -781,8 +778,8 @@ inductive definitions
     qualify(c|->q :: I*, c) = q
 
   CTQ-ImportNext:
-    (c0 =/= c) (qualify(I*, c) = q)
-    -------------------------------
+    (c0 =/=ID c) (qualify(I*, c) = q)
+    ---------------------------------
     qualify(c0|->q0 :: I*, c) = q
 
   CTQ-ClassFound:
@@ -790,8 +787,8 @@ inductive definitions
     qualify(I*, c|->q:ct, c) = q
 
   CTQ-ClassNext:
-    (c0 =/= c) (qualify(I*, c) = q)
-    -------------------------------
+    (c0 =/=ID c) (qualify(I*, c) = q)
+    ---------------------------------
     qualify(I*, c0|->q0:ct, c) = q
 
   // Get type variables from current class (CTV: class table variables)
@@ -822,8 +819,8 @@ inductive definitions
     X in X :: X*
 
   TVI-Next:
-    (X =/= Y) (X in X*)
-    -------------------
+    (X =/=ID Y) (X in X*)
+    ---------------------
     X in Y :: X*
 
   // Type variable not in list (TVE: type variable exclusion)
@@ -832,8 +829,8 @@ inductive definitions
     X notin []
 
   TVE-Next:
-    (X =/= Y) (X notin X*)
-    ----------------------
+    (X =/=ID Y) (X notin X*)
+    ------------------------
     X notin Y :: X*
 
   // Length comparison (TVL: type variables length)
@@ -900,8 +897,8 @@ inductive definitions
     replace([], [], X) = X
 
   SV-Next:
-    (X =/= Y) (replace(X*, t*, Y) = s)
-    ----------------------------------
+    (X =/=ID Y) (replace(X*, t*, Y) = s)
+    ------------------------------------
     replace(X::X*, t::t*, Y) = s
 
   // Method types (SM: substitution method)
@@ -1190,8 +1187,8 @@ inductive definitions
     CT; Ef; El |- ! e : boolean
 
   E-Subsumption:
-    (CT |- t <: s) (t =/= s) (CT; Ef; El |- e : t)
-    ----------------------------------------------
+    (CT |- t <: s) (t =/=AType s) (CT; Ef; El |- e : t)
+    ---------------------------------------------------
     CT; Ef; El |- e : s
 
   E-Weak:
@@ -1231,8 +1228,8 @@ inductive definitions
     x notin dom((/))
 
   ED-Next:
-    (x =/= y) (x notin dom(E))
-    --------------------------
+    (x =/=ID y) (x notin dom(E))
+    ----------------------------
     x notin dom(E,y:t)
 
   // Field environments
@@ -1282,8 +1279,8 @@ inductive definitions
     x : t in Ef; El,x:t
 
   LLF-NextLocal:
-    (x=/=y) (x : t in Ef; El)
-    -------------------------
+    (x =/=ID y) (x : t in Ef; El)
+    -----------------------------
     x : t in Ef; El,y:s
 
   LLF-FoundField:
@@ -1291,8 +1288,8 @@ inductive definitions
     x : t in Ef,x:t; (/)
 
   LLF-NextField:
-    (x=/=y) (x : t in Ef; (/))
-    --------------------------
+    (x =/=ID y) (x : t in Ef; (/))
+    ------------------------------
     x : t in Ef,y:s; (/)
 
   // Lookup in local environment (LL: lookup local)
@@ -1301,23 +1298,11 @@ inductive definitions
     x : t in El,x:t
 
   LL-NextLocal:
-    (x=/=y) (x : t in El)
-    ---------------------
+    (x =/=ID y) (x : t in El)
+    -------------------------
     x : t in El,y:s
 
   // Subtyping (SUB: subtyping)
-  // SUB-Int:
-  //   ----------------
-  //   CT |- int <: int
-
-  // SUB-Boolean:
-  //   ------------------------
-  //   CT |- boolean <: boolean
-
-  // SUB-ClassRefl:
-  //   ------------------
-  //   CT |- q t* <: q t*
-
   SUB-Refl:
     ------------
     CT |- t <: t
@@ -1334,7 +1319,7 @@ inductive definitions
   SUB-Trans:
     (CT.q1 = {s*, msig*, s, X*})
     [X* |-> t1*](s) = s1
-    t =/= s1
+    t =/=AType s1
     CT |- s1 <: t
     ----------------------------
     CT |- q1 t1* <: t
@@ -1348,37 +1333,6 @@ inductive definitions
     (CT |- t1 <: t2) (CT |- t1* <: t2*)
     -----------------------------------
     CT |- t1 :: t1* <: t2 :: t2*
-
-  // Class type inequality
-  // Inequality of one class type (CNQ: class not equal)
-  // CNQ-ClassName:
-  //   q1 =/= q2
-  //   -----------------
-  //   q1 t1* =|= q2 t2*
-
-  // CNQ-Args:
-  //   t1* =|= t2*
-  //   ---------------
-  //   q t1* =|= q t2*
-
-  // Inequality of list of class types (CNQL: class not equal list)
-  // CNQL-Empty1:
-  //   --------------
-  //   [] =|= t :: t*
-
-  // CNQL-Empty2:
-  //   --------------
-  //   t :: t* =|= []
-
-  // CNQL-NonEmpty1:
-  //   t1 =|= t2
-  //   -----------------------
-  //   t1 :: t1* =|= t2 :: t2*
-
-  // CNQL-NonEmpty2:
-  //   t1* =|= t2*
-  //   ---------------------
-  //   t :: t1* =|= t :: t2*
 
 // Freshness condition
 fresh x : ID in E : Env by x notin dom(E)
