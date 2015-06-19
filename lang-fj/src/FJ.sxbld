@@ -461,8 +461,8 @@ judgement forms
   { ID ":" AType "in" Env ";" Env }
   { ID ":" AType "in" Env }
   { "typevarsAsTypes" "(" TypeVars ")" "=" ATypes }
-  { AType "=|=" AType }
-  { ATypes "=|=" ATypes }
+  //{ AType "=|=" AType }
+  //{ ATypes "=|=" ATypes }
   
 
 inductive definitions
@@ -1330,7 +1330,7 @@ inductive definitions
   SUB-Trans:
     (CT.q1 = {s*, msig*, s, X*})
     [X* |-> t1*](s) = s1
-    t =|= s1
+    t =/= s1
     CT |- s1 <: t
     ----------------------------
     CT |- q1 t1* <: t
@@ -1347,34 +1347,34 @@ inductive definitions
 
   // Class type inequality
   // Inequality of one class type (CNQ: class not equal)
-  CNQ-ClassName:
-    q1 =/= q2
-    -----------------
-    q1 t1* =|= q2 t2*
+  // CNQ-ClassName:
+  //   q1 =/= q2
+  //   -----------------
+  //   q1 t1* =|= q2 t2*
 
-  CNQ-Args:
-    t1* =|= t2*
-    ---------------
-    q t1* =|= q t2*
+  // CNQ-Args:
+  //   t1* =|= t2*
+  //   ---------------
+  //   q t1* =|= q t2*
 
   // Inequality of list of class types (CNQL: class not equal list)
-  CNQL-Empty1:
-    --------------
-    [] =|= t :: t*
+  // CNQL-Empty1:
+  //   --------------
+  //   [] =|= t :: t*
 
-  CNQL-Empty2:
-    --------------
-    t :: t* =|= []
+  // CNQL-Empty2:
+  //   --------------
+  //   t :: t* =|= []
 
-  CNQL-NonEmpty1:
-    t1 =|= t2
-    -----------------------
-    t1 :: t1* =|= t2 :: t2*
+  // CNQL-NonEmpty1:
+  //   t1 =|= t2
+  //   -----------------------
+  //   t1 :: t1* =|= t2 :: t2*
 
-  CNQL-NonEmpty2:
-    t1* =|= t2*
-    ---------------------
-    t :: t1* =|= t :: t2*
+  // CNQL-NonEmpty2:
+  //   t1* =|= t2*
+  //   ---------------------
+  //   t :: t1* =|= t :: t2*
 
 // Freshness condition
 fresh x : ID in E : Env by x notin dom(E)
