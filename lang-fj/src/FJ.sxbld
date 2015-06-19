@@ -1190,8 +1190,8 @@ inductive definitions
     CT; Ef; El |- ! e : boolean
 
   E-Subsumption:
-    (CT; Ef; El |- e : t) (CT |- t <: s)
-    ------------------------------------
+    (CT |- t <: s) (t =/= s) (CT; Ef; El |- e : t)
+    ----------------------------------------------
     CT; Ef; El |- e : s
 
   E-Weak:
