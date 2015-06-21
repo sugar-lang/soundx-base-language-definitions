@@ -555,36 +555,36 @@ inductive definitions
     msigs(CT, X*, t, ) = []
 
   MS-Override:
+    mlookup(CT, t, m) = s*->s
     msigs(CT, X*, t, meth*) = msig*
     mtype(m, msig*) = undef
     normPrim(CT, X*, T) = s
     normPrimParams(CT, X*, p*) = s*
-    mlookup(CT, t, m) = s*->s
     ---------------------------------------------------------------
     msigs(CT, X*, t, public T m(p*) mbody meth*) = m:s*->s :: msig*
 
   MS-NoOverride:
+    mlookup(CT, t, m) = undef
     msigs(CT, X*, t, meth*) = msig*
     mtype(m, msig*) = undef
     normPrim(CT, X*, T) = s
     normPrimParams(CT, X*, p*) = s*
-    mlookup(CT, t, m) = undef
     ---------------------------------------------------------------
     msigs(CT, X*, t, public T m(p*) mbody meth*) = m:s*->s :: msig*
 
   MS-OverrideVoid:
+    mlookup(CT, t, m) = s*->void
     msigs(CT, X*, t, meth*) = msig*
     mtype(m, msig*) = undef
     normPrimParams(CT, X*, p*) = s*
-    mlookup(CT, t, m) = s*->void
     ---------------------------------------------------------------------
     msigs(CT, X*, t, public void m(p*) mbody meth*) = m:s*->void :: msig*
 
   MS-NoOverrideVoid:
+    mlookup(CT, t, m) = undef
     msigs(CT, X*, t, meth*) = msig*
     mtype(m, msig*) = undef
     normPrimParams(CT, X*, p*) = s*
-    mlookup(CT, t, m) = undef
     ---------------------------------------------------------------------
     msigs(CT, X*, t, public void m(p*) mbody meth*) = m:s*->void :: msig*
 
