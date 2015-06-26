@@ -1,11 +1,11 @@
 Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: org.sugarj.language.fj
-Bundle-SymbolicName: org.sugarj.language.fj;singleton:=true
+Bundle-SymbolicName: org.sugarj.language.javalight;singleton:=true
 Bundle-Version: 1.2.0.qualifier
-Export-Package: org.sugarj.fj
+Export-Package: org.sugarj.javalight
 Bundle-ActivationPolicy: lazy
-Bundle-Activator: org.sugarj.fj.Activator
+Bundle-Activator: org.sugarj.javalight.Activator
 Require-Bundle: org.eclipse.ui,
  org.eclipse.core.runtime,
  org.spoofax.terms,

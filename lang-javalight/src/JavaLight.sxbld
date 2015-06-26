@@ -1,4 +1,4 @@
-base language definition FJ 
+base language definition JavaLight
 
 lexical syntax
   [\ \t\r\n] -> LAYOUT
@@ -692,15 +692,20 @@ inductive definitions
     -----------------------------------
     normPrim(CT, X*, boolean) = boolean
 
-  NT-Identifier:
-    norm(CT, X*, X) = t
+  NT-ClassOrVar:
+    norm(CT, X*, T) = t
     -----------------------
-    normPrim(CT, X*, X) = t
+    normPrim(CT, X*, T) = t
 
-  NT-GenClass:
-    norm(CT, X*, c<T+>) = t
-    ---------------------------
-    normPrim(CT, X*, c<T+>) = t
+  // NT-Identifier:
+  //   norm(CT, X*, X) = t
+  //   -----------------------
+  //   normPrim(CT, X*, X) = t
+
+  // NT-GenClass:
+  //   norm(CT, X*, c<T+>) = t
+  //   ---------------------------
+  //   normPrim(CT, X*, c<T+>) = t
 
   // Class table handling
   // Add import to class table (CTI: class table import)
@@ -1196,10 +1201,10 @@ inductive definitions
     ----------------------------------------
     CT; Ef; El,x1:s1 |- e : t
 
-  // E-Weak2:
-  //   (CT; Ef; El,x2:s2 |- e : t) (x1 notin dom(El,x2:s2))
-  //   ----------------------------------------------------
-  //   CT; Ef; El,x1:s1,x2:s2 |- e : t
+  E-Weak2:
+    (CT; Ef; El,x2:s2 |- e : t) (x1 notin dom(El,x2:s2))
+    ----------------------------------------------------
+    CT; Ef; El,x1:s1,x2:s2 |- e : t
 
   // E-Weak3:
   //   (CT; Ef; El,x2:s2,x3:s3 |- e : t) (x1 notin dom(El,x2:s2,x3:s3))
@@ -1354,4 +1359,4 @@ interface for tld* is M derived by [] |- tld* => M
 
 // File extensions
 base file extension java
-extensible file extension xfj
+extensible file extension xjl
