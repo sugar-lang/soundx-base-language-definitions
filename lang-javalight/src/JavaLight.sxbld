@@ -1085,6 +1085,16 @@ inductive definitions
     ---------------------------------
     CT; Ef; El |- { stm1* } stm* ~ rt
 
+  S-Weak1: // for verification
+    (CT; Ef; El |- stm* ~ rt) (x1 notin dom(El))
+    --------------------------------------------
+    CT; Ef; El,x1:s1 |- stm* ~ rt
+
+  S-Weak2: // for verification
+    (CT; Ef; El,x2:s2 |- stm* ~ rt) (x1 notin dom(El,x2:s2))
+    --------------------------------------------------------
+    CT; Ef; El,x1:s1,x2:s2 |- stm* ~ rt
+
   // Expressions (E: expression)
   E-Int:
     ---------------------
@@ -1191,17 +1201,17 @@ inductive definitions
     ---------------------------
     CT; Ef; El |- ! e : boolean
 
-  E-Subsumption:
+  E-Subsumption: // for verification
     (CT |- t <: s) (t =/=AType s) (CT; Ef; El |- e : t)
     ---------------------------------------------------
     CT; Ef; El |- e : s
 
-  E-Weak1:
+  E-Weak1: // for verification
     (CT; Ef; El |- e : t) (x1 notin dom(El))
     ----------------------------------------
     CT; Ef; El,x1:s1 |- e : t
 
-  E-Weak2:
+  E-Weak2: // for verification
     (CT; Ef; El,x2:s2 |- e : t) (x1 notin dom(El,x2:s2))
     ----------------------------------------------------
     CT; Ef; El,x1:s1,x2:s2 |- e : t
@@ -1346,6 +1356,16 @@ inductive definitions
 
 // Freshness condition
 fresh x : ID in E : Env by x notin dom(E)
+
+inductive definitions
+  // Freshness
+  NEQ-Fresh: // for verification
+    ---------------------
+    x =/=ID fresh(El,x:t)
+
+  ED-Fresh: // for verification
+    ---------------------------
+    fresh(El,x:t) notin dom(El)
 
 // Extension declarations
 context-free syntax
