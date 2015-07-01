@@ -411,8 +411,6 @@ variables
 interface ModuleInterface
 
 judgement forms
-  // { "suffix" "(" QID ")" "=" ID } // TODO must be provided by SoundX
-  // { "concat" "(" PID "," ID ")" "=" QID } // TODO must be provided by SoundX
   { ClassTable "|-" ToplevelDecs "=>" ModuleInterface }
   { ClassTable "|" PID "|-" ToplevelDecs "=>" ModuleInterface }
   { ClassTable "+" ID "|->" QID "=" ClassTable }
@@ -696,16 +694,6 @@ inductive definitions
     norm(CT, X*, T) = t
     -----------------------
     normPrim(CT, X*, T) = t
-
-  // NT-Identifier:
-  //   norm(CT, X*, X) = t
-  //   -----------------------
-  //   normPrim(CT, X*, X) = t
-
-  // NT-GenClass:
-  //   norm(CT, X*, c<T+>) = t
-  //   ---------------------------
-  //   normPrim(CT, X*, c<T+>) = t
 
   // Class table handling
   // Add import to class table (CTI: class table import)
@@ -1215,11 +1203,6 @@ inductive definitions
     (CT; Ef; El,x2:s2 |- e : t) (x1 notin dom(El,x2:s2))
     ----------------------------------------------------
     CT; Ef; El,x1:s1,x2:s2 |- e : t
-
-  // E-Weak3:
-  //   (CT; Ef; El,x2:s2,x3:s3 |- e : t) (x1 notin dom(El,x2:s2,x3:s3))
-  //   ----------------------------------------------------------------
-  //   CT; Ef; El,x1:s1,x2:s2,x3:s3 |- e : t
 
   // Expression lists (EL: expression list)
   EL-Empty:
