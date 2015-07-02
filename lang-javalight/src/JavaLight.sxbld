@@ -36,6 +36,9 @@ lexical syntax
   "this"      -> Keyword
   "true"      -> Keyword
   "false"     -> Keyword
+  "if"        -> Keyword
+  "else"      -> Keyword
+  "while"     -> Keyword
   Keyword     -> ID {reject}
 
 // Types
@@ -770,8 +773,13 @@ inductive definitions
     ---------------------------
     qualify(c|->q :: I*, c) = q
 
-  CTQ-ImportNext:
+  CTQ-ImportNext1:
     (c0 =/=ID c) (qualify(I*, c) = q)
+    ---------------------------------
+    qualify(c0|->q0 :: I*, c) = q
+
+  CTQ-ImportNext2:
+    (q0 =/=ID q) (qualify(I*, c) = q)
     ---------------------------------
     qualify(c0|->q0 :: I*, c) = q
 
@@ -779,8 +787,13 @@ inductive definitions
     ----------------------------
     qualify(I*, c|->q:ct, c) = q
 
-  CTQ-ClassNext:
+  CTQ-ClassNext1:
     (c0 =/=ID c) (qualify(I*, c) = q)
+    ---------------------------------
+    qualify(I*, c0|->q0:ct, c) = q
+
+  CTQ-ClassNext2:
+    (q0 =/=ID q) (qualify(I*, c) = q)
     ---------------------------------
     qualify(I*, c0|->q0:ct, c) = q
 
