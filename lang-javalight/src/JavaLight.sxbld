@@ -358,6 +358,8 @@ context-free syntax
   "(/)"                -> Env
   Env "," ID ":" AType -> Env
 
+  Env ";" Env          -> FLEnv
+
   // Module interface
   ClassType -> ModuleInterface
 
@@ -379,7 +381,8 @@ lexical syntax
   "CT" ALPHANUMS      -> MVClassTable
   "M" ALPHANUMS       -> MVModuleInterface
   "mlres" ALPHANUMS   -> MVMlookupRes
-  "E" ALPHANUMS        -> MVEnv
+  "E" ALPHANUMS       -> MVEnv
+  "FLE" ALPHANUMS     -> MVFLEnv
 
 lexical restrictions
   MVAType
@@ -392,6 +395,7 @@ lexical restrictions
   MVModuleInterface
   MVMlookupRes
   MVEnv
+  MVFLEnv
     -/- [a-zA-Z0-9]
 
 variables
@@ -409,6 +413,7 @@ variables
   MVModuleInterface -> ModuleInterface {prefer}
   MVMlookupRes      -> MlookupRes      {prefer}
   MVEnv             -> Env             {prefer}
+  MVFLEnv           -> FLEnv           {prefer}
 
 // Module system declarations
 interface ModuleInterface
@@ -451,6 +456,7 @@ judgement forms
   { "typevars" "(" ClassTable ")" "=" TypeVars }
   { "class" "(" ClassTable ")" "=" AType }
   { ID "notin" "dom" "(" Env ")" }
+  { ID "notin" "dom" "(" FLEnv ")" }
   { "localenv" "(" ClassTable "," Parameters ")" "=" Env }
   { "localenvTail" "(" ClassTable "," ParametersTail ")" "=" Env }
   { ClassTable ";" Env ";" Env "|-" Statements "~" RetType }
@@ -459,7 +465,7 @@ judgement forms
   { "atypesTail" "(" ClassTable "," Env "," Env "," ExprsTail ")" "=" ATypes }
   { ClassTable "|-" AType "<:" AType }
   { ClassTable "|-" ATypes "<:" ATypes }
-  { ID ":" AType "in" Env ";" Env }
+  { ID ":" AType "in" FLEnv }
   { ID ":" AType "in" Env }
   { "typevarsAsTypes" "(" TypeVars ")" "=" ATypes }
 
@@ -1203,18 +1209,18 @@ inductive definitions
     CT; Ef; El |- ! e : boolean
 
   E-Subsumption: // for verification
-    (CT |- t <: s) (t =/=AType s) (CT; Ef; El |- e : t)
-    ---------------------------------------------------
+    (CT |- t <: s) (CT; Ef; El |- e : t)
+    ------------------------------------
     CT; Ef; El |- e : s
 
   E-Weak1: // for verification
-    (CT; Ef; El |- e : t) (x1 notin dom(El))
-    ----------------------------------------
+    (CT; Ef; El |- e : t) (x1 notin dom(Ef;El))
+    -------------------------------------------
     CT; Ef; El,x1:s1 |- e : t
 
   E-Weak2: // for verification
-    (CT; Ef; El,x2:s2 |- e : t) (x1 notin dom(El,x2:s2))
-    ----------------------------------------------------
+    (CT; Ef; El,x2:s2 |- e : t) (x1 notin dom(Ef;El,x2:s2))
+    -------------------------------------------------------
     CT; Ef; El,x1:s1,x2:s2 |- e : t
 
   // Expression lists (EL: expression list)
@@ -1247,6 +1253,11 @@ inductive definitions
     (x =/=ID y) (x notin dom(E))
     ----------------------------
     x notin dom(E,y:t)
+
+  ED-FieldLocal:
+    (x notin dom(Ef)) (x notin dom(El))
+    -----------------------------------
+    x notin dom(Ef;El)
 
   // Field environments
   // Build field environment (FE: field environment)
@@ -1351,17 +1362,17 @@ inductive definitions
     CT |- t1 :: t1* <: t2 :: t2*
 
 // Freshness condition
-fresh x : ID in E : Env by x notin dom(E)
+fresh x : ID in FLE : FLEnv by x notin dom(FLE)
 
 inductive definitions
   // Freshness
   NEQ-Fresh: // for verification
-    ---------------------
-    x =/=ID fresh(El,x:t)
+    ------------------------
+    x =/=ID fresh(Ef;El,x:t)
 
   ED-Fresh: // for verification
-    ---------------------------
-    fresh(El,x:t) notin dom(El)
+    ------------------------------
+    fresh(Ef;El,x:t) notin dom(El)
 
 // Extension declarations
 context-free syntax
