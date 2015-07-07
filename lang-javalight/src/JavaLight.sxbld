@@ -1209,7 +1209,7 @@ inductive definitions
     CT; Ef; El |- ! e : boolean
 
   E-Subsumption: // for verification
-    (CT |- t <: s) (CT; Ef; El |- e : t)
+    (CT; Ef; El |- e : t) (CT |- t <: s)
     ------------------------------------
     CT; Ef; El |- e : s
 
@@ -1366,9 +1366,13 @@ fresh x : ID in FLE : FLEnv by x notin dom(FLE)
 
 inductive definitions
   // Freshness
-  NEQ-Fresh: // for verification
+  NEQ-Fresh1: // for verification
     ------------------------
     x =/=ID fresh(Ef;El,x:t)
+
+  NEQ-Fresh2: // for verification
+    ------------------------
+    fresh(Ef;El,x:t) =/=ID x
 
   ED-Fresh: // for verification
     ------------------------------
