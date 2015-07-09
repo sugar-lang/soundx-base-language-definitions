@@ -440,7 +440,6 @@ judgement forms
   { "normPrimParams" "(" ClassTable "," TypeVars "," Parameters ")" "=" ATypes }
   { "normPrimParamsTail" "(" ClassTable "," TypeVars "," ParametersTail ")" "=" ATypes }
   { "normPrim" "(" ClassTable "," TypeVars "," Type ")" "=" AType }
-  { "normListPrim" "(" ClassTable "," TypeVars "," Types1 ")" "=" ATypes } // TODO req?
   { "norm" "(" ClassTable "," TypeVars "," Type ")" "=" AType }
   { "normList" "(" ClassTable "," TypeVars "," Types1 ")" "=" ATypes }
   { "mt" "[" TypeVars "|->" ATypes "]" "(" MethType ")" "=" MethType }
