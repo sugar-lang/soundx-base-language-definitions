@@ -95,8 +95,8 @@ inductive definitions
     x notin dom({})
 
   F-Var:
-    (x =/= y) (x notin dom(C))
-    --------------------------
+    (x =/=ID y) (x notin dom(C))
+    ----------------------------
     x notin dom(C,y:T)
 
 context-free syntax
@@ -125,15 +125,15 @@ inductive definitions
     ----------
     x notin []
   NE-Cons:
-    (x =/= y) (x notin X)
-    ---------------------
+    (x =/=ID y) (x notin X)
+    -----------------------
     x notin y,X
   E-Eq:
     --------
     x in x,X
   E-Neq:
-    (x =/= y) (x in X)
-    ------------------
+    (x =/=ID y) (x in X)
+    --------------------
     x in y,X
   U-Empty:
     ----------
@@ -151,8 +151,8 @@ inductive definitions
     ------------
     x,X \ x = X1
   D-Neq:
-    (x =/= y) (X \ x = X1)
-    ----------------------
+    (x =/=ID y) (X \ x = X1)
+    ------------------------
     y,X \ x = y,X1
   D-Empty:
     -----------
@@ -189,7 +189,7 @@ inductive definitions
     --------------
     [x|->S](x) = S
   SUB-TyVar2:
-    x =/= y
+    x =/=ID y
     --------------
     [x|->S](y) = y
   SUB-Arrow:
@@ -210,8 +210,8 @@ inductive definitions
     ------------
     x:T in C,x:T
   L-Next:
-    (x=/=y) (x:T in C)
-    ------------------
+    (x =/=ID y) (x:T in C)
+    ----------------------
     x:T in C,y:S
 
   T-Nat:

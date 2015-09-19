@@ -84,8 +84,8 @@ judgement forms
 
 inductive definitions
   L-Next:
-    (x=/=y) (x:T in C)
-    ------------------
+    (x =/=ID y) (x:T in C)
+    ----------------------
     x:T in C,y:S
   L-Found:
     ------------
@@ -175,8 +175,8 @@ inductive definitions
     x notin dom({})
 
   F-Cons:
-    (x =/= y) (x notin dom(C))
-    --------------------------
+    (x =/=ID y) (x notin dom(C))
+    ----------------------------
     x notin dom(C,y:T)
 
   U-Empty:

@@ -94,16 +94,16 @@ inductive definitions
     ---------------
     x notin dom({})
   F-Var:
-    (x =/= y) (x notin dom(C))
-    --------------------------
+    (x =/=ID y) (x notin dom(C))
+    ----------------------------
     x notin dom(C,y:T)
 
   L-Found:
     ------------
     x:T in C,x:T
   L-Next:
-    (x=/=y) (x:T in C)
-    ------------------
+    (x =/=ID y) (x:T in C)
+    ----------------------
     x:T in C,y:S
     
   T-Var:
