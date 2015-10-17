@@ -1091,14 +1091,14 @@ inductive definitions
     ---------------------------------
     CT; Ef; El |- { stm1* } stm* ~ rt
 
-  S-Weak1: // for verification
-    (CT; Ef; El |- stm* ~ rt) (x1 notin dom(El))
-    --------------------------------------------
+  S-Weak: // for verification
+    (CT; Ef; El |- stm* ~ rt) (x1 notin dom(Ef;El))
+    -----------------------------------------------
     CT; Ef; El,x1:s1 |- stm* ~ rt
 
-  S-Weak2: // for verification
-    (CT; Ef; El,x2:s2 |- stm* ~ rt) (x1 notin dom(El,x2:s2))
-    --------------------------------------------------------
+  S-PermWeak: // for verification
+    (CT; Ef; El,x2:s2 |- stm* ~ rt) (x1 notin dom(Ef;El,x2:s2))
+    -----------------------------------------------------------
     CT; Ef; El,x1:s1,x2:s2 |- stm* ~ rt
 
   // Expressions (E: expression)
@@ -1212,12 +1212,12 @@ inductive definitions
     ------------------------------------
     CT; Ef; El |- e : s
 
-  E-Weak1: // for verification
+  E-Weak: // for verification
     (CT; Ef; El |- e : t) (x1 notin dom(Ef;El))
     -------------------------------------------
     CT; Ef; El,x1:s1 |- e : t
 
-  E-Weak2: // for verification
+  E-PermWeak: // for verification
     (CT; Ef; El,x2:s2 |- e : t) (x1 notin dom(Ef;El,x2:s2))
     -------------------------------------------------------
     CT; Ef; El,x1:s1,x2:s2 |- e : t
@@ -1362,20 +1362,6 @@ inductive definitions
 
 // Freshness condition
 fresh x : ID in FLE : FLEnv by x notin dom(FLE)
-
-inductive definitions
-  // Freshness
-  NEQ-Fresh1: // for verification
-    ------------------------
-    x =/=ID fresh(Ef;El,x:t)
-
-  NEQ-Fresh2: // for verification
-    ------------------------
-    fresh(Ef;El,x:t) =/=ID x
-
-  ED-Fresh: // for verification
-    ------------------------------
-    fresh(Ef;El,x:t) notin dom(El)
 
 // Extension declarations
 context-free syntax
