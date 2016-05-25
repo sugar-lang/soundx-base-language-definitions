@@ -97,6 +97,28 @@ inductive definitions
     (x =/=ID y) (x notin dom(C))
     ----------------------------
     x notin dom(C,y:T)
+  
+  F-Fresh-1:
+    -------------------------
+    fresh(C,x:T) notin dom(C)
+
+  F-Fresh-2a:
+    ------------------
+    fresh(C,x:T) =/=ID x
+
+  F-Fresh-2b:
+    ------------------
+    x =/=ID fresh(C,x:T) 
+
+  F-Fresh-3a:
+    x:T in C
+    ------------------
+    x =/=ID fresh(C) 
+
+  F-Fresh-3b:
+    x:T in C
+    ------------------
+    fresh(C) =/=ID x 
 
   L-Found:
     ------------
