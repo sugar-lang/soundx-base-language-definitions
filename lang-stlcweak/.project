@@ -1,12 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <projectDescription>
-	<name>stlcweak</name>
+	<name>soundx-stlcweak</name>
 	<comment></comment>
+	<projects>
+	</projects>
 	<buildSpec>
-          	<buildCommand>
+		<buildCommand>
 			<name>org.sugarj.editor.SugarJBuilder</name>
 			<arguments>
-		</arguments>
+			</arguments>
 		</buildCommand>
 		<buildCommand>
 			<name>org.eclipse.jdt.core.javabuilder</name>
